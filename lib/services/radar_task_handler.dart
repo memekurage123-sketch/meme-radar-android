@@ -27,6 +27,7 @@ class RadarTaskHandler extends TaskHandler {
   String _activeChain = 'bsc';
   List<Map<String, dynamic>> _liveDiscoveryRows = [];
   bool _isCycleRunning = false;
+  bool _pendingCycle = false;
 
   String _formatCurrency(dynamic value) {
     if (value == null) return '-';
@@ -76,8 +77,15 @@ class RadarTaskHandler extends TaskHandler {
   }
   
   Future<void> _runCycle() async {
-    if (_isCycleRunning || _scanner == null || _state == null) return;
+    if (_scanner == null || _state == null) return;
+
+    if (_isCycleRunning) {
+      _pendingCycle = true;
+      return;
+    }
+
     _isCycleRunning = true;
+    _pendingCycle = false;
 
     final stopwatch = Stopwatch()..start();
     try {
@@ -151,6 +159,9 @@ class RadarTaskHandler extends TaskHandler {
       }));
     } finally {
       _isCycleRunning = false;
+      if (_pendingCycle) {
+        Future.microtask(() => _runCycle());
+      }
     }
   }
 
