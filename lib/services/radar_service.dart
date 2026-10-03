@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import '../radar_core/ave.dart';
@@ -37,6 +36,9 @@ class RadarService extends ChangeNotifier with WidgetsBindingObserver {
       : _storageService = storageService ?? StorageService();
 
   RadarScanStatus get status => _status;
+  @visibleForTesting
+  set testStatus(RadarScanStatus s) => _status = s;
+
   bool get isRunning => _status == RadarScanStatus.scanning || _status == RadarScanStatus.idle;
   bool get isCycleRunning => _status == RadarScanStatus.scanning;
   String get activeChain => _activeChain;
@@ -132,6 +134,9 @@ class RadarService extends ChangeNotifier with WidgetsBindingObserver {
     
     FlutterForegroundTask.addTaskDataCallback(_onReceiveTaskData);
   }
+
+  @visibleForTesting
+  void testOnReceiveTaskData(Object data) => _onReceiveTaskData(data);
 
   void _onReceiveTaskData(Object data) {
     if (_status == RadarScanStatus.stopped) return;

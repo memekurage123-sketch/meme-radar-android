@@ -47,4 +47,31 @@ void main() {
       expect(service.activeChain, chain, reason: 'Failed to switch to $chain');
     }
   });
+
+  test('RadarService ignores IPC messages if status is stopped', () async {
+    final storage = FakeStorageService();
+    final service = RadarService(storageService: storage);
+
+    // Initial state is stopped
+    expect(service.status, RadarScanStatus.stopped);
+
+    service.testOnReceiveTaskData('{"event": "cycle_complete", "activeChain": "eth", "scanCount": 10, "totalDiscovered": 5, "totalPrequalified": 2, "marketQualifiedCount": 1, "liveDiscoveryRows": [], "lastCycleDurationMs": 100, "lastScanTime": 10000000}');
+
+    // State should remain stopped, the message should be ignored
+    expect(service.status, RadarScanStatus.stopped);
+    expect(service.activeChain, 'bsc'); // Should not have updated to 'eth'
+  });
+
+  test('RadarService processes IPC messages if status is not stopped', () async {
+    final storage = FakeStorageService();
+    final service = RadarService(storageService: storage);
+
+    service.testStatus = RadarScanStatus.scanning;
+
+    service.testOnReceiveTaskData('{"event": "cycle_complete", "activeChain": "eth", "scanCount": 10, "totalDiscovered": 5, "totalPrequalified": 2, "marketQualifiedCount": 1, "liveDiscoveryRows": [], "lastCycleDurationMs": 100, "lastScanTime": 10000000}');
+
+    // State should become idle, message processed
+    expect(service.status, RadarScanStatus.idle);
+    expect(service.activeChain, 'eth');
+  });
 }
