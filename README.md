@@ -1,5 +1,7 @@
 # Meme Radar Android
 
+[English](README.md) | [简体中文](README_zh-CN.md)
+
 Unofficial community Android port of Meme Radar.
 
 ## Features
