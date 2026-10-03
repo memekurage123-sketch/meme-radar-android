@@ -6,5 +6,6 @@ build/
 # Local environment and keys
 .env
 *.local.json
+.ave-key.local
 .ave-settings.json
 AVE_API_KEY

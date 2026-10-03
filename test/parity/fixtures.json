@@ -1,0 +1,358 @@
+{
+  "address_cases": [
+    { "id": "sol_valid", "chain": "sol", "address": "So11111111111111111111111111111111111111112" },
+    { "id": "sol_invalid_2s", "chain": "sol", "address": "22222222222222222222222222222222" },
+    { "id": "sol_invalid_1s", "chain": "sol", "address": "11111111111111111111111111111111" },
+    { "id": "sol_invalid_evm", "chain": "sol", "address": "0x1234567890abcdef1234567890abcdef12345678" },
+    { "id": "bsc_valid_lower", "chain": "bsc", "address": "0x1234567890abcdef1234567890abcdef12345678" },
+    { "id": "bsc_valid_upper", "chain": "bsc", "address": "0X1234567890ABCDEF1234567890ABCDEF12345678" },
+    { "id": "bsc_invalid_zero", "chain": "bsc", "address": "0x0000000000000000000000000000000000000000" },
+    { "id": "eth_invalid_e", "chain": "eth", "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" },
+    { "id": "bsc_pool_32", "chain": "bsc", "isPool": true, "address": "0x1234567890abcdef1234567890abcdef12345678" },
+    { "id": "bsc_pool_64", "chain": "bsc", "isPool": true, "address": "0x1212121212121212121212121212121212121212121212121212121212121212" },
+    { "id": "bsc_pool_zero_64", "chain": "bsc", "isPool": true, "address": "0x0000000000000000000000000000000000000000000000000000000000000000" }
+  ],
+  "chart_risk_cases": [
+    {
+      "id": "pump_vertical_plateau",
+      "now": 1800000000000,
+      "candles": [
+        { "time": 1799999460000, "open": 1.0, "high": 1.3844, "low": 0.995, "close": 1.3776, "volume": 100 },
+        { "time": 1799999520000, "open": 1.3776, "high": 1.3869, "low": 1.3707, "close": 1.38, "volume": 100 },
+        { "time": 1799999580000, "open": 1.38, "high": 1.3869, "low": 1.3731, "close": 1.38, "volume": 100 },
+        { "time": 1799999640000, "open": 1.38, "high": 1.3969, "low": 1.3731, "close": 1.39, "volume": 100 },
+        { "time": 1799999700000, "open": 1.39, "high": 1.3969, "low": 1.383, "close": 1.39, "volume": 100 },
+        { "time": 1799999760000, "open": 1.39, "high": 1.3969, "low": 1.383, "close": 1.39, "volume": 100 },
+        { "time": 1799999820000, "open": 1.39, "high": 1.407, "low": 1.383, "close": 1.40, "volume": 100 },
+        { "time": 1799999880000, "open": 1.40, "high": 1.407, "low": 1.393, "close": 1.40, "volume": 100 },
+        { "time": 1799999940000, "open": 1.40, "high": 1.407, "low": 1.393, "close": 1.40, "volume": 100 }
+      ]
+    },
+    {
+      "id": "dump_sustained_collapse",
+      "now": 1800000000000,
+      "candles": [
+        { "time": 1799999460000, "open": 1.0, "high": 1.005, "low": 0.995, "close": 1.0, "volume": 100 },
+        { "time": 1799999520000, "open": 1.0, "high": 1.005, "low": 0.646, "close": 0.65, "volume": 100 },
+        { "time": 1799999580000, "open": 0.65, "high": 0.653, "low": 0.348, "close": 0.35, "volume": 100 },
+        { "time": 1799999640000, "open": 0.35, "high": 0.351, "low": 0.179, "close": 0.18, "volume": 100 },
+        { "time": 1799999700000, "open": 0.18, "high": 0.181, "low": 0.179, "close": 0.18, "volume": 100 },
+        { "time": 1799999760000, "open": 0.18, "high": 0.181, "low": 0.179, "close": 0.18, "volume": 100 },
+        { "time": 1799999820000, "open": 0.18, "high": 0.181, "low": 0.179, "close": 0.18, "volume": 100 },
+        { "time": 1799999880000, "open": 0.18, "high": 0.181, "low": 0.179, "close": 0.18, "volume": 100 },
+        { "time": 1799999940000, "open": 0.18, "high": 0.181, "low": 0.179, "close": 0.18, "volume": 100 }
+      ]
+    },
+    {
+      "id": "good_candles_clear",
+      "now": 1800000000000,
+      "candles": [
+        { "time": 1799999520000, "open": 1.0, "high": 1.005, "low": 0.995, "close": 1.00, "volume": 100 },
+        { "time": 1799999580000, "open": 1.0, "high": 1.015, "low": 0.995, "close": 1.01, "volume": 100 },
+        { "time": 1799999640000, "open": 1.01, "high": 1.025, "low": 1.005, "close": 1.02, "volume": 100 },
+        { "time": 1799999700000, "open": 1.02, "high": 1.03, "low": 1.015, "close": 1.025, "volume": 100 },
+        { "time": 1799999760000, "open": 1.025, "high": 1.035, "low": 1.02, "close": 1.03, "volume": 100 },
+        { "time": 1799999820000, "open": 1.03, "high": 1.045, "low": 1.025, "close": 1.04, "volume": 100 },
+        { "time": 1799999880000, "open": 1.04, "high": 1.055, "low": 1.035, "close": 1.05, "volume": 100 },
+        { "time": 1799999940000, "open": 1.05, "high": 1.065, "low": 1.045, "close": 1.06, "volume": 100 }
+      ]
+    },
+    {
+      "id": "too_few_candles_unknown",
+      "now": 1800000000000,
+      "candles": [
+        { "time": 1799999520000, "open": 1.0, "high": 1.005, "low": 0.995, "close": 1.00, "volume": 100 },
+        { "time": 1799999580000, "open": 1.0, "high": 1.015, "low": 0.995, "close": 1.01, "volume": 100 },
+        { "time": 1799999640000, "open": 1.01, "high": 1.025, "low": 1.005, "close": 1.02, "volume": 100 }
+      ]
+    },
+    {
+      "id": "time_gap_unknown",
+      "now": 1800000000000,
+      "candles": [
+        { "time": 1799999520000, "open": 1.0, "high": 1.005, "low": 0.995, "close": 1.00, "volume": 100 },
+        { "time": 1799999580000, "open": 1.0, "high": 1.015, "low": 0.995, "close": 1.01, "volume": 100 },
+        { "time": 1799999760000, "open": 1.01, "high": 1.025, "low": 1.005, "close": 1.02, "volume": 100 },
+        { "time": 1799999820000, "open": 1.02, "high": 1.035, "low": 1.015, "close": 1.03, "volume": 100 },
+        { "time": 1799999880000, "open": 1.03, "high": 1.045, "low": 1.025, "close": 1.04, "volume": 100 },
+        { "time": 1799999940000, "open": 1.04, "high": 1.055, "low": 1.035, "close": 1.05, "volume": 100 }
+      ]
+    }
+  ],
+  "discovery_cases": [
+    {
+      "id": "clean_pass_bsc",
+      "chain": "bsc",
+      "nowSec": 1800000000,
+      "row": {
+        "address": "0x1234567890abcdef1234567890abcdef12345678",
+        "chain": "bsc",
+        "market_cap": 50000,
+        "liquidity": 12000,
+        "creation_timestamp": 1799999400,
+        "rug_ratio": 0.1,
+        "bundler_rate": 0.05,
+        "rat_trader_amount_rate": 0.05,
+        "is_wash_trading": false,
+        "is_honeypot": false,
+        "volume_1h": 5000,
+        "holder_count": 120
+      }
+    },
+    {
+      "id": "low_liquidity_reject",
+      "chain": "bsc",
+      "nowSec": 1800000000,
+      "row": {
+        "address": "0x1234567890abcdef1234567890abcdef12345678",
+        "chain": "bsc",
+        "market_cap": 50000,
+        "liquidity": 2500,
+        "creation_timestamp": 1799999400,
+        "rug_ratio": 0.1,
+        "bundler_rate": 0.05,
+        "rat_trader_amount_rate": 0.05,
+        "is_wash_trading": false,
+        "is_honeypot": false,
+        "volume_1h": 5000,
+        "holder_count": 120
+      }
+    },
+    {
+      "id": "high_tax_reject",
+      "chain": "bsc",
+      "nowSec": 1800000000,
+      "row": {
+        "address": "0x1234567890abcdef1234567890abcdef12345678",
+        "chain": "bsc",
+        "market_cap": 50000,
+        "liquidity": 12000,
+        "buy_tax": 0.10,
+        "sell_tax": 0.15,
+        "creation_timestamp": 1799999400,
+        "rug_ratio": 0.1,
+        "bundler_rate": 0.05,
+        "rat_trader_amount_rate": 0.05,
+        "is_wash_trading": false,
+        "is_honeypot": false,
+        "volume_1h": 5000,
+        "holder_count": 120
+      }
+    },
+    {
+      "id": "dev_hold_reject",
+      "chain": "bsc",
+      "nowSec": 1800000000,
+      "row": {
+        "address": "0x1234567890abcdef1234567890abcdef12345678",
+        "chain": "bsc",
+        "market_cap": 50000,
+        "liquidity": 12000,
+        "dev_team_hold_rate": 0.05,
+        "creation_timestamp": 1799999400,
+        "rug_ratio": 0.1,
+        "bundler_rate": 0.05,
+        "rat_trader_amount_rate": 0.05,
+        "is_wash_trading": false,
+        "is_honeypot": false,
+        "volume_1h": 5000,
+        "holder_count": 120
+      }
+    },
+    {
+      "id": "high_rug_reject",
+      "chain": "bsc",
+      "nowSec": 1800000000,
+      "row": {
+        "address": "0x1234567890abcdef1234567890abcdef12345678",
+        "chain": "bsc",
+        "market_cap": 50000,
+        "liquidity": 12000,
+        "creation_timestamp": 1799999400,
+        "rug_ratio": 0.40,
+        "bundler_rate": 0.05,
+        "rat_trader_amount_rate": 0.05,
+        "is_wash_trading": false,
+        "is_honeypot": false,
+        "volume_1h": 5000,
+        "holder_count": 120
+      }
+    },
+    {
+      "id": "low_mc_reject",
+      "chain": "bsc",
+      "nowSec": 1800000000,
+      "row": {
+        "address": "0x1234567890abcdef1234567890abcdef12345678",
+        "chain": "bsc",
+        "market_cap": 5000,
+        "liquidity": 12000,
+        "creation_timestamp": 1799999400,
+        "rug_ratio": 0.1,
+        "bundler_rate": 0.05,
+        "rat_trader_amount_rate": 0.05,
+        "is_wash_trading": false,
+        "is_honeypot": false,
+        "volume_1h": 5000,
+        "holder_count": 120
+      }
+    },
+    {
+      "id": "wash_trading_reject",
+      "chain": "bsc",
+      "nowSec": 1800000000,
+      "row": {
+        "address": "0x1234567890abcdef1234567890abcdef12345678",
+        "chain": "bsc",
+        "market_cap": 50000,
+        "liquidity": 12000,
+        "creation_timestamp": 1799999400,
+        "rug_ratio": 0.1,
+        "bundler_rate": 0.05,
+        "rat_trader_amount_rate": 0.05,
+        "is_wash_trading": true,
+        "is_honeypot": false,
+        "volume_1h": 5000,
+        "holder_count": 120
+      }
+    },
+    {
+      "id": "honeypot_reject",
+      "chain": "bsc",
+      "nowSec": 1800000000,
+      "row": {
+        "address": "0x1234567890abcdef1234567890abcdef12345678",
+        "chain": "bsc",
+        "market_cap": 50000,
+        "liquidity": 12000,
+        "creation_timestamp": 1799999400,
+        "rug_ratio": 0.1,
+        "bundler_rate": 0.05,
+        "rat_trader_amount_rate": 0.05,
+        "is_wash_trading": false,
+        "is_honeypot": true,
+        "volume_1h": 5000,
+        "holder_count": 120
+      }
+    }
+  ],
+  "deep_screen_cases": [
+    {
+      "id": "deep_all_pass_evm",
+      "chain": "bsc",
+      "nowMs": 1800000000000,
+      "discovery": {
+        "address": "0x1234567890abcdef1234567890abcdef12345678",
+        "chain": "bsc",
+        "market_cap": 50000,
+        "liquidity": 15000,
+        "sells_24h": 50,
+        "rug_ratio": 0.05,
+        "top_10_holder_rate": 0.20,
+        "bundler_rate": 0.05,
+        "rat_trader_amount_rate": 0.05,
+        "top70_sniper_hold_rate": 0.02,
+        "is_wash_trading": false,
+        "creator_token_status": "creator_close",
+        "dev_team_hold_rate": 0.005,
+        "lock_percent": 0.90
+      },
+      "audit": {
+        "security": {
+          "open_source": true,
+          "owner_renounced": true,
+          "is_honeypot": false,
+          "buy_tax": 0.01,
+          "sell_tax": 0.01,
+          "rug_ratio": 0.05,
+          "top_10_holder_rate": 0.20,
+          "dev_team_hold_rate": 0.005,
+          "top70_sniper_hold_rate": 0.02,
+          "locked_ratio": 0.90,
+          "is_wash_trading": false
+        },
+        "holders": [
+          { "address": "0x0000000000000000000000000000000000000001", "addr_type": 0, "buy_tx_count_cur": 3, "is_new": false, "is_suspicious": false, "amount_percentage": 0.02, "tags": [] },
+          { "address": "0x0000000000000000000000000000000000000002", "addr_type": 0, "buy_tx_count_cur": 3, "is_new": false, "is_suspicious": false, "amount_percentage": 0.02, "tags": [] },
+          { "address": "0x0000000000000000000000000000000000000003", "addr_type": 0, "buy_tx_count_cur": 3, "is_new": false, "is_suspicious": false, "amount_percentage": 0.02, "tags": [] },
+          { "address": "0x0000000000000000000000000000000000000004", "addr_type": 0, "buy_tx_count_cur": 3, "is_new": false, "is_suspicious": false, "amount_percentage": 0.02, "tags": [] },
+          { "address": "0x0000000000000000000000000000000000000005", "addr_type": 0, "buy_tx_count_cur": 3, "is_new": false, "is_suspicious": false, "amount_percentage": 0.02, "tags": [] },
+          { "address": "0x0000000000000000000000000000000000000006", "addr_type": 0, "buy_tx_count_cur": 3, "is_new": false, "is_suspicious": false, "amount_percentage": 0.02, "tags": [] },
+          { "address": "0x0000000000000000000000000000000000000007", "addr_type": 0, "buy_tx_count_cur": 3, "is_new": false, "is_suspicious": false, "amount_percentage": 0.02, "tags": [] },
+          { "address": "0x0000000000000000000000000000000000000008", "addr_type": 0, "buy_tx_count_cur": 3, "is_new": false, "is_suspicious": false, "amount_percentage": 0.02, "tags": [] },
+          { "address": "0x0000000000000000000000000000000000000009", "addr_type": 0, "buy_tx_count_cur": 3, "is_new": false, "is_suspicious": false, "amount_percentage": 0.02, "tags": [] },
+          { "address": "0x0000000000000000000000000000000000000010", "addr_type": 0, "buy_tx_count_cur": 3, "is_new": false, "is_suspicious": false, "amount_percentage": 0.02, "tags": [] }
+        ],
+        "candles": [
+          { "time": 1799999640000, "open": 1.0, "high": 1.02, "low": 0.99, "close": 1.01, "volume": 500 },
+          { "time": 1799999700000, "open": 1.01, "high": 1.02, "low": 0.99, "close": 1.01, "volume": 500 },
+          { "time": 1799999760000, "open": 1.01, "high": 1.02, "low": 0.99, "close": 1.01, "volume": 500 },
+          { "time": 1799999820000, "open": 1.01, "high": 1.02, "low": 0.99, "close": 1.01, "volume": 500 },
+          { "time": 1799999880000, "open": 1.01, "high": 1.02, "low": 0.99, "close": 1.01, "volume": 500 },
+          { "time": 1799999940000, "open": 1.01, "high": 1.02, "low": 0.99, "close": 1.01, "volume": 500 }
+        ],
+        "traders": [
+          { "address": "0x0000000000000000000000000000000000000011", "sell_tx_count_cur": 2, "last_active_timestamp": 1799999940 },
+          { "address": "0x0000000000000000000000000000000000000012", "sell_tx_count_cur": 2, "last_active_timestamp": 1799999940 },
+          { "address": "0x0000000000000000000000000000000000000013", "sell_tx_count_cur": 2, "last_active_timestamp": 1799999940 },
+          { "address": "0x0000000000000000000000000000000000000014", "sell_tx_count_cur": 2, "last_active_timestamp": 1799999940 },
+          { "address": "0x0000000000000000000000000000000000000015", "sell_tx_count_cur": 2, "last_active_timestamp": 1799999940 },
+          { "address": "0x0000000000000000000000000000000000000016", "sell_tx_count_cur": 2, "last_active_timestamp": 1799999940 }
+        ],
+        "info": {
+          "liquidity": 15000,
+          "price": {
+            "price": 1.01,
+            "price_5m": 1.0,
+            "swaps_5m": 10,
+            "buys_5m": 6,
+            "sells_5m": 4,
+            "sells_24h": 50,
+            "volume_5m": 2000
+          },
+          "holder_count": 100
+        }
+      }
+    },
+    {
+      "id": "deep_not_opensource_reject",
+      "chain": "bsc",
+      "nowMs": 1800000000000,
+      "discovery": {
+        "address": "0x1234567890abcdef1234567890abcdef12345678",
+        "chain": "bsc",
+        "market_cap": 50000,
+        "liquidity": 15000,
+        "sells_24h": 50,
+        "rug_ratio": 0.05,
+        "top_10_holder_rate": 0.20,
+        "bundler_rate": 0.05,
+        "rat_trader_amount_rate": 0.05,
+        "top70_sniper_hold_rate": 0.02,
+        "is_wash_trading": false,
+        "creator_token_status": "creator_close",
+        "dev_team_hold_rate": 0.005,
+        "lock_percent": 0.90
+      },
+      "audit": {
+        "security": {
+          "open_source": false,
+          "owner_renounced": true,
+          "is_honeypot": false,
+          "buy_tax": 0.01,
+          "sell_tax": 0.01,
+          "rug_ratio": 0.05,
+          "top_10_holder_rate": 0.20,
+          "dev_team_hold_rate": 0.005,
+          "top70_sniper_hold_rate": 0.02,
+          "locked_ratio": 0.90,
+          "is_wash_trading": false
+        },
+        "holders": [],
+        "candles": [],
+        "traders": [],
+        "info": { "liquidity": 15000 }
+      }
+    }
+  ]
+}
