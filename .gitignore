@@ -1,0 +1,10 @@
+# Dart / Flutter
+.dart_tool/
+build/
+.packages
+
+# Local environment and keys
+.env
+*.local.json
+.ave-settings.json
+AVE_API_KEY
