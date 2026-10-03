@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import '../radar_core/ave.dart';
 import 'storage_service.dart';
@@ -14,7 +15,7 @@ enum RadarScanStatus {
   error,
 }
 
-class RadarService extends ChangeNotifier {
+class RadarService extends ChangeNotifier with WidgetsBindingObserver {
   final StorageService _storageService;
 
   RadarScanStatus _status = RadarScanStatus.stopped;
@@ -30,6 +31,7 @@ class RadarService extends ChangeNotifier {
   int _scanCount = 0;
   int _totalDiscovered = 0;
   int _totalPrequalified = 0;
+  bool _isStartingScan = false;
 
   RadarService({StorageService? storageService})
       : _storageService = storageService ?? StorageService();
@@ -77,6 +79,7 @@ class RadarService extends ChangeNotifier {
   int get marketQualifiedCount => _marketQualifiedCount;
 
   Future<void> init() async {
+    WidgetsBinding.instance.addObserver(this);
     _activeChain = await _storageService.getSelectedChain('bsc');
     _sortMethod = await _storageService.getSortMethod('recent');
     
@@ -88,6 +91,25 @@ class RadarService extends ChangeNotifier {
     }
     
     notifyListeners();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkServiceState();
+    }
+  }
+
+  Future<void> _checkServiceState() async {
+    final isRunning = await FlutterForegroundTask.isRunningService;
+    if (isRunning && _status == RadarScanStatus.stopped) {
+      _status = RadarScanStatus.idle;
+      _requestDataFromTask();
+      notifyListeners();
+    } else if (!isRunning && _status != RadarScanStatus.stopped) {
+      _status = RadarScanStatus.stopped;
+      notifyListeners();
+    }
   }
   
   void _initForegroundTask() {
@@ -112,6 +134,8 @@ class RadarService extends ChangeNotifier {
   }
 
   void _onReceiveTaskData(Object data) {
+    if (_status == RadarScanStatus.stopped) return;
+
     if (data is String) {
       try {
         final Map<String, dynamic> msg = jsonDecode(data);
@@ -214,27 +238,34 @@ class RadarService extends ChangeNotifier {
   }
 
   Future<void> startScan() async {
-    final apiKey = await _storageService.getApiKey();
-    if (apiKey == null || apiKey.trim().isEmpty) {
-      _status = RadarScanStatus.error;
-      _lastError = '请先配置 AVE API Key';
+    if (_isStartingScan) return;
+
+    _isStartingScan = true;
+    try {
+      final apiKey = await _storageService.getApiKey();
+      if (apiKey == null || apiKey.trim().isEmpty) {
+        _status = RadarScanStatus.error;
+        _lastError = '请先配置 AVE API Key';
+        notifyListeners();
+        return;
+      }
+
+      if (await FlutterForegroundTask.isRunningService) {
+        return;
+      }
+
+      _lastError = null;
+      _status = RadarScanStatus.scanning;
       notifyListeners();
-      return;
-    }
 
-    if (await FlutterForegroundTask.isRunningService) {
-      return;
+      await FlutterForegroundTask.startService(
+        notificationTitle: 'Meme Radar',
+        notificationText: 'Radar is scanning · ${_activeChain.toUpperCase()}',
+        callback: startCallback,
+      );
+    } finally {
+      _isStartingScan = false;
     }
-
-    _lastError = null;
-    _status = RadarScanStatus.scanning;
-    notifyListeners();
-    
-    await FlutterForegroundTask.startService(
-      notificationTitle: 'Meme Radar',
-      notificationText: 'Radar is scanning · ${_activeChain.toUpperCase()}',
-      callback: startCallback,
-    );
   }
 
   void stopScan() async {
@@ -255,6 +286,7 @@ class RadarService extends ChangeNotifier {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     FlutterForegroundTask.removeTaskDataCallback(_onReceiveTaskData);
     super.dispose();
   }
