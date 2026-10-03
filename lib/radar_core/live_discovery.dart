@@ -149,6 +149,7 @@ List<Map<String, dynamic>> normalizeLiveRows(
           : null,
       'holdersDelta': (holderComparable && holders != null && oldHolders != null) ? holders - oldHolders : null,
       'smartDelta': null,
+      'discoveryScore': display.screen.score,
       'priorityBand': display.screen.priorityBand,
       'hasUnknownRisk': true,
       'auditEligible': display.screen.pass,

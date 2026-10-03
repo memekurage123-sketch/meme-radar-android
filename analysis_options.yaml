@@ -1,0 +1,13 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+  errors:
+    avoid_print: ignore
+    dangling_library_doc_comments: ignore
+
+linter:
+  rules:
+    prefer_const_constructors: true

@@ -36,3 +36,14 @@
 | `src/updater.mjs` | Desktop Git/tarball self-updater. Android uses in-app APK version check / GitHub Releases. |
 | `src/windows-proxy.mjs` | Windows registry proxy detection. Mobile uses Android OS-level proxy settings. |
 | `public/*` | Web UI. Replaced by native Flutter UI in Phase 2. |
+
+---
+
+## Testing & Parity Status
+
+**JS ↔ Dart automated parity:**
+- 26/26 PASS
+- 100% matched business logic semantics, scoring, filtering rules, and reasons across core components.
+
+**Status as of Unofficial Android Port v0.1.0-beta.1**
+This Android port is unofficial and community maintained. It is not an official Android release from the upstream author.

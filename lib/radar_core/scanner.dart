@@ -135,11 +135,9 @@ class Scanner {
   /// Executes one full scanning cycle
   Future<Map<String, dynamic>> cycle() async {
     final chain = state.activeChain;
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final nowSec = now / 1000.0;
 
     state.scanInProgress = true;
-    state.lastAttemptAt = now;
+    state.lastAttemptAt = DateTime.now().millisecondsSinceEpoch;
 
     try {
       // 1. Fetch raw discovery rows from AVE
@@ -149,6 +147,9 @@ class Scanner {
         enrichPairs: true,
       );
 
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final nowSec = now / 1000.0;
+      
       state.discoveredCount += discoveredRows.length;
       final observations = <Map<String, dynamic>>[];
       final prequalified = <Map<String, dynamic>>[];
@@ -232,6 +233,7 @@ class Scanner {
         'discovered': discoveredRows.length,
         'prequalified': prequalified.length,
         'liveLeads': reconciled.length,
+        'discoveredRows': discoveredRows,
       };
     } catch (e) {
       state.status = 'ERROR';

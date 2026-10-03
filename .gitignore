@@ -9,3 +9,22 @@ build/
 .ave-key.local
 .ave-settings.json
 AVE_API_KEY
+
+# Secrets & Keys
+*.jks
+*.keystore
+key.properties
+.ave-key.local
+.env
+.env.*
+logs/
+
+# Release Artifacts
+*.apk
+SHA256SUMS*.txt
+
+# IDE
+.idea/
+.metadata
+*.iml
+.flutter-plugins-dependencies
