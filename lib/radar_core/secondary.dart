@@ -19,7 +19,8 @@ const Map<String, String> goPlusEvmChainIds = {
   'base': '8453',
 };
 
-final _numberPattern = RegExp(r'^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$', caseSensitive: false);
+final _numberPattern = RegExp(r'^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$',
+    caseSensitive: false);
 const int defaultMaxBytes = 1000000;
 
 double? _optionalNumber(dynamic value) {
@@ -98,7 +99,8 @@ bool _sameAddress(dynamic left, dynamic right, String chain) {
   return a.isNotEmpty && b.isNotEmpty && a == b;
 }
 
-bool _validAddress(dynamic value, String chain) => validTokenAddress(chain, _cleanString(value, 128));
+bool _validAddress(dynamic value, String chain) =>
+    validTokenAddress(chain, _cleanString(value, 128));
 
 Map<String, dynamic> _emptyMarket() => {
       'complete': false,
@@ -124,7 +126,13 @@ const List<List<dynamic>> evmSecurityRules = [
   ['selfDestruct', 'selfdestruct', true, false, '合约可自毁'],
   ['externalCall', 'external_call', true, false, '合约包含高风险外部调用'],
   ['slippageModifiable', 'slippage_modifiable', true, false, '滑点或税率可修改'],
-  ['personalSlippageModifiable', 'personal_slippage_modifiable', true, false, '可按地址修改滑点或税率'],
+  [
+    'personalSlippageModifiable',
+    'personal_slippage_modifiable',
+    true,
+    false,
+    '可按地址修改滑点或税率'
+  ],
   ['transferPausable', 'transfer_pausable', true, false, '代币转账可暂停'],
   ['blacklisted', 'is_blacklisted', true, false, '合约包含黑名单机制'],
   ['tradingCooldown', 'trading_cooldown', true, false, '合约包含交易冷却限制'],
@@ -134,7 +142,13 @@ const List<List<dynamic>> solSecurityRules = [
   ['mintable', 'mintable', true, true, '代币仍可增发'],
   ['freezable', 'freezable', true, true, '代币账户仍可冻结'],
   ['closable', 'closable', true, false, '代币账户可被关闭'],
-  ['balanceMutableAuthority', 'balance_mutable_authority', true, false, '存在修改余额权限'],
+  [
+    'balanceMutableAuthority',
+    'balance_mutable_authority',
+    true,
+    false,
+    '存在修改余额权限'
+  ],
   ['transferFeeUpgradable', 'transfer_fee_upgradable', true, false, '转账费权限可升级'],
   ['nonTransferable', 'non_transferable', true, false, '代币被标记为不可转账'],
 ];
@@ -144,7 +158,9 @@ dynamic _findGoPlusRecord(dynamic payload, String tokenAddress, String chain) {
   final result = payload['result'];
   if (result is List) {
     for (final row in result) {
-      if (row is Map && _sameAddress(row['contract_address'] ?? row['address'] ?? row['mint'], tokenAddress, chain)) {
+      if (row is Map &&
+          _sameAddress(row['contract_address'] ?? row['address'] ?? row['mint'],
+              tokenAddress, chain)) {
         return row;
       }
     }
@@ -156,18 +172,22 @@ dynamic _findGoPlusRecord(dynamic payload, String tokenAddress, String chain) {
         return entry.value;
       }
     }
-    if (chain == 'sol' && solSecurityRules.any((r) => result.containsKey(r[1]))) {
+    if (chain == 'sol' &&
+        solSecurityRules.any((r) => result.containsKey(r[1]))) {
       return result;
     }
   }
   return null;
 }
 
-Map<String, dynamic> parseGoPlus(dynamic payload, {required String chain, required String tokenAddress}) {
+Map<String, dynamic> parseGoPlus(dynamic payload,
+    {required String chain, required String tokenAddress}) {
   if (payload is! Map) {
     throw Exception('unexpected GoPlus JSON shape');
   }
-  if (payload.containsKey('code') && payload['code'] != 1 && payload['code'] != '1') {
+  if (payload.containsKey('code') &&
+      payload['code'] != 1 &&
+      payload['code'] != '1') {
     throw Exception('GoPlus rejected request');
   }
   final record = _findGoPlusRecord(payload, tokenAddress, chain);
@@ -217,7 +237,11 @@ Map<String, dynamic> parseGoPlus(dynamic payload, {required String chain, requir
     'found': true,
     'security': {
       'complete': complete,
-      'verdict': fatal.isNotEmpty ? 'FATAL' : complete ? 'NO_FATAL_FLAGS' : 'UNKNOWN',
+      'verdict': fatal.isNotEmpty
+          ? 'FATAL'
+          : complete
+              ? 'NO_FATAL_FLAGS'
+              : 'UNKNOWN',
       'fatal': fatal,
       'unknownFields': unknownFields,
       'fields': fields,
@@ -227,16 +251,24 @@ Map<String, dynamic> parseGoPlus(dynamic payload, {required String chain, requir
   };
 }
 
-Map<String, dynamic> parseDexScreener(dynamic payload, {required String chain, required String dexChainId, required String tokenAddress}) {
+Map<String, dynamic> parseDexScreener(dynamic payload,
+    {required String chain,
+    required String dexChainId,
+    required String tokenAddress}) {
   if (payload is! List) {
     throw Exception('unexpected DexScreener JSON shape');
   }
-  final pairs = payload.where((pair) {
-    if (pair is! Map) return false;
-    final cId = _cleanString(pair['chainId'], 32);
-    final baseAddr = pair['baseToken'] is Map ? (pair['baseToken'] as Map)['address'] : null;
-    return cId == dexChainId && _sameAddress(baseAddr, tokenAddress, chain);
-  }).map((e) => e as Map).toList();
+  final pairs = payload
+      .where((pair) {
+        if (pair is! Map) return false;
+        final cId = _cleanString(pair['chainId'], 32);
+        final baseAddr = pair['baseToken'] is Map
+            ? (pair['baseToken'] as Map)['address']
+            : null;
+        return cId == dexChainId && _sameAddress(baseAddr, tokenAddress, chain);
+      })
+      .map((e) => e as Map)
+      .toList();
 
   if (pairs.isEmpty) {
     return {'found': false, 'market': _emptyMarket()};
@@ -257,11 +289,13 @@ Map<String, dynamic> parseDexScreener(dynamic payload, {required String chain, r
       .take(10)
       .toList();
 
-  final baseToken = pair['baseToken'] is Map ? pair['baseToken'] as Map : const {};
+  final baseToken =
+      pair['baseToken'] is Map ? pair['baseToken'] as Map : const {};
   final priceUsd = _optionalNonNegative(pair['priceUsd']);
   final marketCap = _optionalNonNegative(pair['marketCap']);
   final fdv = _optionalNonNegative(pair['fdv']);
-  final liquidityUsd = _optionalNonNegative((pair['liquidity'] as Map?)?['usd']);
+  final liquidityUsd =
+      _optionalNonNegative((pair['liquidity'] as Map?)?['usd']);
 
   final market = {
     'complete': priceUsd != null && marketCap != null && liquidityUsd != null,
@@ -321,9 +355,17 @@ class SecondaryValidator {
       'goPlus': {'status': goPlusSupported ? 'PENDING' : 'UNSUPPORTED'},
     };
 
-    if ((dexSupported || goPlusSupported) && !_validAddress(address, normalizedChain)) {
-      if (dexSupported) sources['dexScreener'] = {'status': 'ERROR', 'errorCode': 'INVALID_ADDRESS'};
-      if (goPlusSupported) sources['goPlus'] = {'status': 'ERROR', 'errorCode': 'INVALID_ADDRESS'};
+    if ((dexSupported || goPlusSupported) &&
+        !_validAddress(address, normalizedChain)) {
+      if (dexSupported) {
+        sources['dexScreener'] = {
+          'status': 'ERROR',
+          'errorCode': 'INVALID_ADDRESS'
+        };
+      }
+      if (goPlusSupported) {
+        sources['goPlus'] = {'status': 'ERROR', 'errorCode': 'INVALID_ADDRESS'};
+      }
       return {
         'status': 'DEGRADED',
         'complete': false,
@@ -349,8 +391,14 @@ class SecondaryValidator {
     final httpClient = client ?? http.Client();
     try {
       final futures = <Future<dynamic>>[
-        if (dexSupported) _fetchDex(httpClient, dexUrl, chain: normalizedChain, dexChainId: dexChainId, tokenAddress: address),
-        if (goPlusSupported) _fetchGoPlus(httpClient, goPlusUrl, chain: normalizedChain, tokenAddress: address),
+        if (dexSupported)
+          _fetchDex(httpClient, dexUrl,
+              chain: normalizedChain,
+              dexChainId: dexChainId,
+              tokenAddress: address),
+        if (goPlusSupported)
+          _fetchGoPlus(httpClient, goPlusUrl,
+              chain: normalizedChain, tokenAddress: address),
       ];
       final results = await Future.wait(futures);
 
@@ -387,29 +435,45 @@ class SecondaryValidator {
     };
   }
 
-  Future<Map<String, dynamic>> _fetchDex(http.Client hc, String url, {required String chain, required String dexChainId, required String tokenAddress}) async {
+  Future<Map<String, dynamic>> _fetchDex(http.Client hc, String url,
+      {required String chain,
+      required String dexChainId,
+      required String tokenAddress}) async {
     try {
-      final res = await hc.get(Uri.parse(url), headers: {'Accept': 'application/json'}).timeout(Duration(milliseconds: timeoutMs));
+      final res = await hc.get(Uri.parse(url), headers: {
+        'Accept': 'application/json'
+      }).timeout(Duration(milliseconds: timeoutMs));
       if (res.statusCode >= 200 && res.statusCode < 300) {
         final payload = jsonDecode(res.body);
-        final parsed = parseDexScreener(payload, chain: chain, dexChainId: dexChainId, tokenAddress: tokenAddress);
+        final parsed = parseDexScreener(payload,
+            chain: chain, dexChainId: dexChainId, tokenAddress: tokenAddress);
         return {
           'source': {'status': parsed['found'] == true ? 'OK' : 'NO_DATA'},
           'market': parsed['market'],
         };
       }
-      return {'source': {'status': 'ERROR', 'errorCode': 'HTTP_${res.statusCode}'}, 'market': _emptyMarket()};
+      return {
+        'source': {'status': 'ERROR', 'errorCode': 'HTTP_${res.statusCode}'},
+        'market': _emptyMarket()
+      };
     } catch (e) {
-      return {'source': {'status': 'ERROR', 'errorCode': 'REQUEST_FAILED'}, 'market': _emptyMarket()};
+      return {
+        'source': {'status': 'ERROR', 'errorCode': 'REQUEST_FAILED'},
+        'market': _emptyMarket()
+      };
     }
   }
 
-  Future<Map<String, dynamic>> _fetchGoPlus(http.Client hc, String url, {required String chain, required String tokenAddress}) async {
+  Future<Map<String, dynamic>> _fetchGoPlus(http.Client hc, String url,
+      {required String chain, required String tokenAddress}) async {
     try {
-      final res = await hc.get(Uri.parse(url), headers: {'Accept': 'application/json'}).timeout(Duration(milliseconds: timeoutMs));
+      final res = await hc.get(Uri.parse(url), headers: {
+        'Accept': 'application/json'
+      }).timeout(Duration(milliseconds: timeoutMs));
       if (res.statusCode >= 200 && res.statusCode < 300) {
         final payload = jsonDecode(res.body);
-        final parsed = parseGoPlus(payload, chain: chain, tokenAddress: tokenAddress);
+        final parsed =
+            parseGoPlus(payload, chain: chain, tokenAddress: tokenAddress);
         return {
           'source': {'status': parsed['found'] == true ? 'OK' : 'NO_DATA'},
           'security': parsed['security'],

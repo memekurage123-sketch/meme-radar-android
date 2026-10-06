@@ -44,29 +44,36 @@ class RadarTaskHandler extends TaskHandler {
     if (n == null) return '-';
     return n.toStringAsFixed(0);
   }
-  
+
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     try {
       _storageService = StorageService();
       _notificationService = NotificationService();
       await _notificationService!.init();
-      
+
       _activeChain = await _storageService!.getSelectedChain('bsc');
       final apiKey = await _storageService!.getApiKey();
 
       if (apiKey == null || apiKey.trim().isEmpty) {
-        FlutterForegroundTask.sendDataToMain(jsonEncode({'event': 'error', 'message': 'API Key not found in secure storage'}));
+        FlutterForegroundTask.sendDataToMain(jsonEncode({
+          'event': 'error',
+          'message': 'API Key not found in secure storage'
+        }));
         return;
       }
 
       _state = RadarState(activeChain: _activeChain);
       _aveClient = AveClient(apiKey: apiKey.trim());
-      _scanner = Scanner(aveClient: _aveClient!, config: RadarConfig(chain: _activeChain), state: _state!);
-      
+      _scanner = Scanner(
+          aveClient: _aveClient!,
+          config: RadarConfig(chain: _activeChain),
+          state: _state!);
+
       _runCycle();
     } catch (e) {
-      FlutterForegroundTask.sendDataToMain(jsonEncode({'event': 'error', 'message': 'Init Error: ${e.toString()}'}));
+      FlutterForegroundTask.sendDataToMain(jsonEncode(
+          {'event': 'error', 'message': 'Init Error: ${e.toString()}'}));
     }
   }
 
@@ -74,7 +81,7 @@ class RadarTaskHandler extends TaskHandler {
   void onRepeatEvent(DateTime timestamp) {
     _runCycle();
   }
-  
+
   Future<void> _runCycle() async {
     if (_isCycleRunning || _scanner == null || _state == null) return;
     _isCycleRunning = true;
@@ -82,8 +89,9 @@ class RadarTaskHandler extends TaskHandler {
     final stopwatch = Stopwatch()..start();
     try {
       final res = await _scanner!.cycle();
-      final discoveredRows = (res['discoveredRows'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-      
+      final discoveredRows =
+          (res['discoveredRows'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+
       _liveDiscoveryRows = normalizeLiveRows(
         discoveredRows,
         _activeChain,
@@ -97,34 +105,35 @@ class RadarTaskHandler extends TaskHandler {
       final deduper = NotificationDeduper(notifiedMap);
       bool mapUpdated = false;
       final nowMs = DateTime.now().millisecondsSinceEpoch;
-      
+
       for (final c in candidates) {
         final address = c['pairAddress'] ?? c['address'] ?? '';
-        
+
         if (deduper.shouldNotify(_activeChain, address, nowMs)) {
           final symbol = c['symbol'] ?? 'Unknown';
           final chainUpper = _activeChain.toUpperCase();
           final isPriority = c['priorityBand'] == true;
-          
-          final title = '$symbol · $chainUpper${isPriority ? ' · PRIORITY' : ''}';
+
+          final title =
+              '$symbol · $chainUpper${isPriority ? ' · PRIORITY' : ''}';
           final mc = _formatCurrency(c['marketCap']);
           final vol = _formatCurrency(c['volume5m']);
           final score = _formatScore(c['discoveryScore']);
-          
+
           final body = 'MC $mc · Vol5m $vol · Score $score';
           final dedupeKey = '${_activeChain}_$address';
           final notificationId = dedupeKey.hashCode;
-          
+
           await _notificationService?.showCandidateNotification(
             id: notificationId,
             title: title,
             body: body,
           );
-          
+
           mapUpdated = true;
         }
       }
-      
+
       if (mapUpdated) {
         await _storageService!.saveNotifiedCandidates(deduper.cleanMap(nowMs));
       }
@@ -142,7 +151,7 @@ class RadarTaskHandler extends TaskHandler {
         'lastCycleDurationMs': stopwatch.elapsedMilliseconds,
         'lastScanTime': DateTime.now().millisecondsSinceEpoch,
       };
-      
+
       FlutterForegroundTask.sendDataToMain(jsonEncode(payload));
     } catch (e) {
       FlutterForegroundTask.sendDataToMain(jsonEncode({
@@ -161,7 +170,7 @@ class RadarTaskHandler extends TaskHandler {
     _scanner = null;
     _state = null;
   }
-  
+
   @override
   void onReceiveData(Object data) {
     if (data is String) {
@@ -173,9 +182,12 @@ class RadarTaskHandler extends TaskHandler {
             _activeChain = newChain;
             _state?.activeChain = newChain;
             _liveDiscoveryRows.clear();
-            
+
             if (_aveClient != null) {
-               _scanner = Scanner(aveClient: _aveClient!, config: RadarConfig(chain: _activeChain), state: _state!);
+              _scanner = Scanner(
+                  aveClient: _aveClient!,
+                  config: RadarConfig(chain: _activeChain),
+                  state: _state!);
             }
             _runCycle();
           }
@@ -189,7 +201,8 @@ class RadarTaskHandler extends TaskHandler {
               'scanCount': _state!.scanCount,
               'totalDiscovered': _state!.discoveredCount,
               'totalPrequalified': _state!.prequalifiedCount,
-              'marketQualifiedCount': _liveDiscoveryRows.where(isEligibleCandidate).length,
+              'marketQualifiedCount':
+                  _liveDiscoveryRows.where(isEligibleCandidate).length,
               'liveDiscoveryRows': _liveDiscoveryRows,
               'lastCycleDurationMs': 0,
               'lastScanTime': DateTime.now().millisecondsSinceEpoch,

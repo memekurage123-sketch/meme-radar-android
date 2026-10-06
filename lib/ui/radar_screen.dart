@@ -54,8 +54,6 @@ class _RadarScreenState extends State<RadarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return ListenableBuilder(
       listenable: widget.radarService,
       builder: (context, _) {
@@ -67,10 +65,17 @@ class _RadarScreenState extends State<RadarScreen> {
         return Scaffold(
           appBar: AppBar(
             title: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(Icons.radar_rounded, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
-                const Text('Meme Radar', style: TextStyle(fontWeight: FontWeight.bold)),
+                Image.asset(
+                  'assets/images/radar_logo.png',
+                  width: 26,
+                  height: 26,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(width: 10),
+                const Text('Meme Radar',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             actions: [
@@ -103,7 +108,8 @@ class _RadarScreenState extends State<RadarScreen> {
               ),
             ],
           ),
-          bottomNavigationBar: _buildBottomActionBar(context, r, isRunning, isScanning),
+          bottomNavigationBar:
+              _buildBottomActionBar(context, r, isRunning, isScanning),
         );
       },
     );
@@ -118,10 +124,14 @@ class _RadarScreenState extends State<RadarScreen> {
     final theme = Theme.of(context);
     final statusText = isScanning
         ? '正在扫描...'
-        : (isRunning ? '等待下轮扫描' : (r.status == RadarScanStatus.error ? '异常' : '已停止'));
+        : (isRunning
+            ? '等待下轮扫描'
+            : (r.status == RadarScanStatus.error ? '异常' : '已停止'));
     final statusColor = isScanning
         ? Colors.amber
-        : (isRunning ? Colors.green : (r.status == RadarScanStatus.error ? Colors.red : Colors.grey));
+        : (isRunning
+            ? Colors.green
+            : (r.status == RadarScanStatus.error ? Colors.red : Colors.grey));
 
     return Container(
       width: double.infinity,
@@ -129,7 +139,8 @@ class _RadarScreenState extends State<RadarScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainer,
         border: Border(
-          bottom: BorderSide(color: theme.colorScheme.outlineVariant.withAlpha(40)),
+          bottom:
+              BorderSide(color: theme.colorScheme.outlineVariant.withAlpha(40)),
         ),
       ),
       child: Column(
@@ -166,7 +177,8 @@ class _RadarScreenState extends State<RadarScreen> {
               const Spacer(),
               Text(
                 '周期: #${r.scanCount}',
-                style: TextStyle(fontSize: 12, color: theme.colorScheme.outline),
+                style:
+                    TextStyle(fontSize: 12, color: theme.colorScheme.outline),
               ),
             ],
           ),
@@ -190,14 +202,16 @@ class _RadarScreenState extends State<RadarScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded, size: 14, color: Colors.redAccent),
+                  const Icon(Icons.warning_amber_rounded,
+                      size: 14, color: Colors.redAccent),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       r.lastError!,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 11, color: Colors.redAccent),
+                      style: const TextStyle(
+                          fontSize: 11, color: Colors.redAccent),
                     ),
                   ),
                 ],
@@ -215,7 +229,8 @@ class _RadarScreenState extends State<RadarScreen> {
       children: [
         Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
         const SizedBox(height: 1),
-        Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+        Text(value,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -265,7 +280,8 @@ class _RadarScreenState extends State<RadarScreen> {
               const SizedBox(height: 16),
               Text(
                 isScanning ? '正在扫描链上数据并执行多维过滤...' : '暂无候选代币',
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
@@ -322,7 +338,8 @@ class _RadarScreenState extends State<RadarScreen> {
                       ),
                       onPressed: () => r.stopScan(),
                       icon: const Icon(Icons.stop_rounded),
-                      label: const Text('Stop Radar', style: TextStyle(fontWeight: FontWeight.bold)),
+                      label: const Text('Stop Radar',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                     )
                   : FilledButton.icon(
                       style: FilledButton.styleFrom(
@@ -331,7 +348,8 @@ class _RadarScreenState extends State<RadarScreen> {
                       ),
                       onPressed: () => r.startScan(),
                       icon: const Icon(Icons.play_arrow_rounded),
-                      label: const Text('Start Radar', style: TextStyle(fontWeight: FontWeight.bold)),
+                      label: const Text('Start Radar',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
             ),
             const SizedBox(width: 12),

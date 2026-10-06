@@ -27,7 +27,9 @@ void main(List<String> args) async {
   // Chain selection (default to bsc or first positional arg)
   var chain = 'bsc';
   for (final arg in args) {
-    if (!arg.startsWith('--') && ['bsc', 'sol', 'base', 'eth', 'robinhood'].contains(arg.toLowerCase())) {
+    if (!arg.startsWith('--') &&
+        ['bsc', 'sol', 'base', 'eth', 'robinhood']
+            .contains(arg.toLowerCase())) {
       chain = arg.toLowerCase();
     }
   }
@@ -177,7 +179,8 @@ Future<void> runSamplePipeline(String chain) async {
     final sym = t['symbol'];
     if (screen.pass) {
       passed++;
-      print('  ✓ [$sym] 通过初筛! 得分: ${screen.score.toStringAsFixed(1)}, 优先波段: ${screen.priorityBand}');
+      print(
+          '  ✓ [$sym] 通过初筛! 得分: ${screen.score.toStringAsFixed(1)}, 优先波段: ${screen.priorityBand}');
     } else {
       print('  ✗ [$sym] 被过滤: ${screen.reasons.join(', ')}');
     }

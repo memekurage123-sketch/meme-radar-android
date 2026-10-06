@@ -35,7 +35,9 @@ class StorageService {
   Future<String> getSelectedChain([String fallback = 'bsc']) async {
     try {
       final chain = await _storage.read(key: _keySelectedChain);
-      if (chain != null && ['sol', 'bsc', 'base', 'eth', 'robinhood'].contains(chain.toLowerCase())) {
+      if (chain != null &&
+          ['sol', 'bsc', 'base', 'eth', 'robinhood']
+              .contains(chain.toLowerCase())) {
         return chain.toLowerCase();
       }
     } catch (_) {}
@@ -51,7 +53,8 @@ class StorageService {
   Future<String> getSortMethod([String fallback = 'recent']) async {
     try {
       final method = await _storage.read(key: _keySortMethod);
-      if (method != null && ['recent', 'volume5m', 'priority'].contains(method)) {
+      if (method != null &&
+          ['recent', 'volume5m', 'priority'].contains(method)) {
         return method;
       }
     } catch (_) {}
@@ -77,8 +80,8 @@ class StorageService {
 
   Future<void> saveNotifiedCandidates(Map<String, int> cleanMap) async {
     try {
-      await _storage.write(key: _keyNotifiedCandidates, value: jsonEncode(cleanMap));
+      await _storage.write(
+          key: _keyNotifiedCandidates, value: jsonEncode(cleanMap));
     } catch (_) {}
   }
 }
-

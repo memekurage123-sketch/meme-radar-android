@@ -9,7 +9,7 @@ class NotificationDeduper {
     if (address.isEmpty) return false;
     final dedupeKey = '${chain}_$address';
     final lastNotified = _notifiedMap[dedupeKey];
-    
+
     if (lastNotified == null || (nowMs - lastNotified) >= 2 * 60 * 60 * 1000) {
       _notifiedMap[dedupeKey] = nowMs;
       return true;

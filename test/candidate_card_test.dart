@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meme_radar_android/ui/candidate_card.dart';
 
 void main() {
-  testWidgets('CandidateCard renders correctly with a valid LIVE_READY fixture', (WidgetTester tester) async {
+  testWidgets('CandidateCard renders correctly with a valid LIVE_READY fixture',
+      (WidgetTester tester) async {
     final Map<String, dynamic> candidateFixture = {
       'symbol': 'PEPE',
       'address': '0x6982508145454ce325ddbe47a25d4ec3d2311933',

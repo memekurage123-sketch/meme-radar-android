@@ -117,7 +117,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
       setState(() {
         _isTesting = false;
         _testSuccess = res['success'] == true;
-        _testResult = res['message']?.toString() ?? (_testSuccess ? '连接成功' : '连接失败');
+        _testResult =
+            res['message']?.toString() ?? (_testSuccess ? '连接成功' : '连接失败');
       });
     }
   }
@@ -150,7 +151,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('排序方式 (仅影响本地视图)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const Text('排序方式 (仅影响本地视图)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -177,12 +179,15 @@ class _SettingsDialogState extends State<SettingsDialog> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text('Candidate Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const Text('Candidate Notifications',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 8),
             Row(
               children: [
                 Icon(
-                  _notificationGranted ? Icons.notifications_active : Icons.notifications_off,
+                  _notificationGranted
+                      ? Icons.notifications_active
+                      : Icons.notifications_off,
                   size: 20,
                   color: _notificationGranted ? Colors.green : Colors.grey,
                 ),
@@ -201,7 +206,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
               ],
             ),
             const SizedBox(height: 24),
-            const Text('AVE API Key', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const Text('AVE API Key',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 8),
             const Text(
               '仅保存在本机 Android Keystore 中，直接请求 AVE 官方 API，绝不上载。',
@@ -210,18 +216,21 @@ class _SettingsDialogState extends State<SettingsDialog> {
             const SizedBox(height: 10),
             if (_savedKeyMasked != null) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_outline, size: 16, color: Colors.green),
+                    const Icon(Icons.check_circle_outline,
+                        size: 16, color: Colors.green),
                     const SizedBox(width: 6),
                     Text(
                       '已保存: $_savedKeyMasked',
-                      style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                      style: const TextStyle(
+                          fontSize: 12, fontFamily: 'monospace'),
                     ),
                   ],
                 ),
@@ -234,12 +243,14 @@ class _SettingsDialogState extends State<SettingsDialog> {
               autocorrect: false,
               enableSuggestions: false,
               decoration: InputDecoration(
-                labelText: _savedKeyMasked != null ? '更换 API Key' : '输入 AVE API Key',
+                labelText:
+                    _savedKeyMasked != null ? '更换 API Key' : '输入 AVE API Key',
                 hintText: '粘贴您的 API Key',
                 border: const OutlineInputBorder(),
                 isDense: true,
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
+                  icon: Icon(
+                      _obscureText ? Icons.visibility_off : Icons.visibility),
                   onPressed: () {
                     setState(() {
                       _obscureText = !_obscureText;
@@ -256,7 +267,10 @@ class _SettingsDialogState extends State<SettingsDialog> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                      SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2)),
                       SizedBox(width: 8),
                       Text('正在测试连接 AVE...', style: TextStyle(fontSize: 13)),
                     ],
@@ -268,10 +282,14 @@ class _SettingsDialogState extends State<SettingsDialog> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _testSuccess ? Colors.green.withAlpha(40) : Colors.red.withAlpha(40),
+                  color: _testSuccess
+                      ? Colors.green.withAlpha(40)
+                      : Colors.red.withAlpha(40),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: _testSuccess ? Colors.green.shade700 : Colors.red.shade700,
+                    color: _testSuccess
+                        ? Colors.green.shade700
+                        : Colors.red.shade700,
                     width: 0.8,
                   ),
                 ),
@@ -289,7 +307,9 @@ class _SettingsDialogState extends State<SettingsDialog> {
                         _testResult!,
                         style: TextStyle(
                           fontSize: 12,
-                          color: _testSuccess ? Colors.green.shade200 : Colors.red.shade200,
+                          color: _testSuccess
+                              ? Colors.green.shade200
+                              : Colors.red.shade200,
                         ),
                       ),
                     ),

@@ -19,19 +19,23 @@ int? _count(dynamic value) {
 }
 
 String _text(dynamic value, int max) {
-  final s = (value?.toString() ?? '').replaceAll(RegExp(r'[\u0000-\u001f\u007f]'), '');
+  final s = (value?.toString() ?? '')
+      .replaceAll(RegExp(r'[\u0000-\u001f\u007f]'), '');
   return s.length > max ? s.substring(0, max) : s;
 }
 
 String _safeText(dynamic value, int max) {
   final str = value?.toString() ?? '';
-  if (RegExp(r'gmgn_[a-z0-9]{8,}|bearer\s|api[_ -]?key|private[_ -]?key', caseSensitive: false).hasMatch(str)) {
+  if (RegExp(r'gmgn_[a-z0-9]{8,}|bearer\s|api[_ -]?key|private[_ -]?key',
+          caseSensitive: false)
+      .hasMatch(str)) {
     return '?';
   }
   return _text(value, max);
 }
 
-String _identity(String chain, String value) => chain == 'sol' ? value : value.toLowerCase();
+String _identity(String chain, String value) =>
+    chain == 'sol' ? value : value.toLowerCase();
 
 final Set<String> _waitingReasons = {
   'AVE 行情已过期或原始时间未核验',
@@ -55,10 +59,14 @@ class AveDisplayStateResult {
   });
 }
 
-AveDisplayStateResult aveDisplayState(Map<String, dynamic> raw, String chain, RadarConfig config, [int? atMs]) {
+AveDisplayStateResult aveDisplayState(
+    Map<String, dynamic> raw, String chain, RadarConfig config,
+    [int? atMs]) {
   final at = atMs ?? DateTime.now().millisecondsSinceEpoch;
-  final screen = discoveryScreen(raw, config.copyWith(chain: chain), at / 1000.0);
-  final visible = screen.pass || screen.reasons.every((reason) => _waitingReasons.contains(reason));
+  final screen =
+      discoveryScreen(raw, config.copyWith(chain: chain), at / 1000.0);
+  final visible = screen.pass ||
+      screen.reasons.every((reason) => _waitingReasons.contains(reason));
   final missing = (_number(raw['liquidity']) ?? 0) <= 0 ||
       (_number(raw['volume_5m']) ?? 0) <= 0 ||
       (screen.createdAt == null || screen.createdAt! <= 0) ||
@@ -83,13 +91,17 @@ List<Map<String, dynamic>> normalizeLiveRows(
   final before = <String, Map<String, dynamic>>{};
   for (final row in previous) {
     if (row is Map && row['address'] != null) {
-      before[_identity(chain, row['address'].toString())] = Map<String, dynamic>.from(row);
+      before[_identity(chain, row['address'].toString())] =
+          Map<String, dynamic>.from(row);
     }
   }
 
   final unique = <String, Map<String, dynamic>>{};
   for (final raw in input.take(300)) {
-    if (raw is! Map || raw['marketProvider'] != 'AVE' || !validTokenAddress(chain, raw['address']?.toString()) || raw['chain'] != chain) {
+    if (raw is! Map ||
+        raw['marketProvider'] != 'AVE' ||
+        !validTokenAddress(chain, raw['address']?.toString()) ||
+        raw['chain'] != chain) {
       continue;
     }
     final rawMap = Map<String, dynamic>.from(raw);
@@ -100,14 +112,24 @@ List<Map<String, dynamic>> normalizeLiveRows(
     final stale = !display.screen.pass;
     final old = before[address];
     final observedAt = _number(rawMap['sourceUpdatedAt'])?.toInt();
-    final oldObservedAt = old != null ? _number(old['observedAt'])?.toInt() : null;
-    final elapsed = (old != null && observedAt != null && oldObservedAt != null) ? observedAt - oldObservedAt : 0;
-    final comparable = !stale && old?['marketProvider'] == 'AVE' && elapsed >= 5000 && elapsed <= 120000;
+    final oldObservedAt =
+        old != null ? _number(old['observedAt'])?.toInt() : null;
+    final elapsed = (old != null && observedAt != null && oldObservedAt != null)
+        ? observedAt - oldObservedAt
+        : 0;
+    final comparable = !stale &&
+        old?['marketProvider'] == 'AVE' &&
+        elapsed >= 5000 &&
+        elapsed <= 120000;
     final price = _number(rawMap['price']);
     final holders = _count(rawMap['holder_count']);
-    final holderAt = _number(rawMap['tokenSourceUpdatedAt'] ?? rawMap['sourceUpdatedAt'])?.toInt();
-    final oldHolderAt = old != null ? _number(old['holderSourceUpdatedAt'])?.toInt() ?? 0 : 0;
-    final holderComparable = comparable && holderAt != null && holderAt > oldHolderAt;
+    final holderAt =
+        _number(rawMap['tokenSourceUpdatedAt'] ?? rawMap['sourceUpdatedAt'])
+            ?.toInt();
+    final oldHolderAt =
+        old != null ? _number(old['holderSourceUpdatedAt'])?.toInt() ?? 0 : 0;
+    final holderComparable =
+        comparable && holderAt != null && holderAt > oldHolderAt;
 
     final oldPrice = old != null ? _number(old['price']) : null;
     final oldHolders = old != null ? _count(old['holders']) : null;
@@ -144,10 +166,17 @@ List<Map<String, dynamic>> normalizeLiveRows(
       'newAt': old?['newAt'] ?? (initialized && old == null ? at : 0),
       'qualifiedAt': old?['qualifiedAt'] ?? (display.screen.pass ? at : null),
       'deltaWindowMs': comparable ? elapsed : null,
-      'priceDelta': (comparable && price != null && price > 0 && oldPrice != null && oldPrice > 0)
+      'priceDelta': (comparable &&
+              price != null &&
+              price > 0 &&
+              oldPrice != null &&
+              oldPrice > 0)
           ? price / oldPrice - 1.0
           : null,
-      'holdersDelta': (holderComparable && holders != null && oldHolders != null) ? holders - oldHolders : null,
+      'holdersDelta':
+          (holderComparable && holders != null && oldHolders != null)
+              ? holders - oldHolders
+              : null,
       'smartDelta': null,
       'discoveryScore': display.screen.score,
       'priorityBand': display.screen.priorityBand,

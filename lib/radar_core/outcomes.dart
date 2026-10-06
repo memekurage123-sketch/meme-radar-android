@@ -31,19 +31,25 @@ List<Map<String, dynamic>> sampleRejected(
   Map<String, dynamic> candidate,
   int now,
 ) {
-  final price = candidate['price'] is num ? (candidate['price'] as num).toDouble() : 0.0;
+  final price =
+      candidate['price'] is num ? (candidate['price'] as num).toDouble() : 0.0;
   if (candidate['status'] != 'HARD_REJECT' || price <= 0) return outcomes;
-  if (outcomes.any((row) => row['address'] == candidate['address'])) return outcomes;
+  if (outcomes.any((row) => row['address'] == candidate['address'])) {
+    return outcomes;
+  }
 
   // Stable 1-in-5 sampling, independent of subsequent returns or popularity.
   final input = utf8.encode('${candidate['chain']}:${candidate['address']}');
   final digest = sha256.convert(input).bytes;
-  if (digest[0] % 5 != 0 || outcomes.where((row) => row['initialDecision'] == 'HARD_REJECT').length >= 200) {
+  if (digest[0] % 5 != 0 ||
+      outcomes.where((row) => row['initialDecision'] == 'HARD_REJECT').length >=
+          200) {
     return outcomes;
   }
 
   final deep = candidate['deep'] is Map ? candidate['deep'] as Map : const {};
-  final failed = (deep['failed'] as List?)?.map((e) => e.toString()).toList() ?? <String>[];
+  final failed = (deep['failed'] as List?)?.map((e) => e.toString()).toList() ??
+      <String>[];
 
   outcomes.add({
     'chain': candidate['chain'],
@@ -76,7 +82,8 @@ class DueOutcomeJob {
   });
 }
 
-List<DueOutcomeJob> dueOutcomeJobs(List<Map<String, dynamic>> outcomes, int now) {
+List<DueOutcomeJob> dueOutcomeJobs(
+    List<Map<String, dynamic>> outcomes, int now) {
   final jobs = <DueOutcomeJob>[];
   for (final row in outcomes) {
     final samples = (row['samples'] as Map?) ?? const {};
@@ -106,8 +113,12 @@ List<DueOutcomeJob> dueOutcomeJobs(List<Map<String, dynamic>> outcomes, int now)
   }
 
   jobs.sort((a, b) {
-    final aRetries = ((a.row['sampleRetries'] as Map?)?[a.key] as Map?)?['attempts'] as int? ?? 0;
-    final bRetries = ((b.row['sampleRetries'] as Map?)?[b.key] as Map?)?['attempts'] as int? ?? 0;
+    final aRetries = ((a.row['sampleRetries'] as Map?)?[a.key]
+            as Map?)?['attempts'] as int? ??
+        0;
+    final bRetries = ((b.row['sampleRetries'] as Map?)?[b.key]
+            as Map?)?['attempts'] as int? ??
+        0;
     final diff = aRetries.compareTo(bRetries);
     if (diff != 0) return diff;
     return a.targetAt.compareTo(b.targetAt);
@@ -130,8 +141,11 @@ List<DueOutcomeJob> selectOutcomeJobs(
   for (final entry in scopes.entries) {
     final chain = entry.key;
     if (!enabled.contains(chain)) continue;
-    final rows = entry.value.where((row) =>
-        (row['chain'] == null || row['chain'] == chain) && row['baselineProvider'] == 'AVE').toList();
+    final rows = entry.value
+        .where((row) =>
+            (row['chain'] == null || row['chain'] == chain) &&
+            row['baselineProvider'] == 'AVE')
+        .toList();
     for (final job in dueOutcomeJobs(rows, now)) {
       list.add(DueOutcomeJob(
         row: job.row,
@@ -143,8 +157,12 @@ List<DueOutcomeJob> selectOutcomeJobs(
   }
 
   list.sort((a, b) {
-    final aRetries = ((a.row['sampleRetries'] as Map?)?[a.key] as Map?)?['attempts'] as int? ?? 0;
-    final bRetries = ((b.row['sampleRetries'] as Map?)?[b.key] as Map?)?['attempts'] as int? ?? 0;
+    final aRetries = ((a.row['sampleRetries'] as Map?)?[a.key]
+            as Map?)?['attempts'] as int? ??
+        0;
+    final bRetries = ((b.row['sampleRetries'] as Map?)?[b.key]
+            as Map?)?['attempts'] as int? ??
+        0;
     final diff = aRetries.compareTo(bRetries);
     if (diff != 0) return diff;
     return a.targetAt.compareTo(b.targetAt);
@@ -153,16 +171,21 @@ List<DueOutcomeJob> selectOutcomeJobs(
   return list.take(limit).toList();
 }
 
-Map<String, dynamic> outcomeCoverage(List<Map<String, dynamic>> outcomes, [int? nowMs]) {
+Map<String, dynamic> outcomeCoverage(List<Map<String, dynamic>> outcomes,
+    [int? nowMs]) {
   final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
 
   Map<String, dynamic> cohort(String decision) {
-    final rows = outcomes.where((r) => r['initialDecision'] == decision).toList();
+    final rows =
+        outcomes.where((r) => r['initialDecision'] == decision).toList();
     final result = <String, dynamic>{};
     for (final entry in horizons.entries) {
       final key = entry.key;
       final duration = entry.value;
-      final eligible = rows.where((r) => now >= ((r['baselineAt'] as num?)?.toInt() ?? 0) + duration).toList();
+      final eligible = rows
+          .where((r) =>
+              now >= ((r['baselineAt'] as num?)?.toInt() ?? 0) + duration)
+          .toList();
       final values = eligible
           .map((r) => ((r['samples'] as Map?)?[key] as Map?)?['return'])
           .whereType<num>()
@@ -170,8 +193,10 @@ Map<String, dynamic> outcomeCoverage(List<Map<String, dynamic>> outcomes, [int? 
           .toList()
         ..sort();
       final n = values.length;
-      final median = n == 0 ? null : (values[(n - 1) ~/ 2] + values[n ~/ 2]) / 2.0;
-      final positiveRate = n == 0 ? null : values.where((x) => x > 0).length / n;
+      final median =
+          n == 0 ? null : (values[(n - 1) ~/ 2] + values[n ~/ 2]) / 2.0;
+      final positiveRate =
+          n == 0 ? null : values.where((x) => x > 0).length / n;
 
       result[key] = {
         'eligible': eligible.length,

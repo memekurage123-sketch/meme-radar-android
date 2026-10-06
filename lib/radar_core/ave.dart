@@ -81,7 +81,8 @@ double? _signedNumeric(dynamic value) {
 }
 
 int? _seconds(dynamic value) {
-  final num? n = value is num ? value : (value is String ? num.tryParse(value) : null);
+  final num? n =
+      value is num ? value : (value is String ? num.tryParse(value) : null);
   if (n != null && n > 0 && n < 100000000000 && n == n.truncateToDouble()) {
     return n.toInt();
   }
@@ -138,7 +139,8 @@ class AveClient {
       throw AveException('AVE_RATE_LIMITED', 'AVE 行情限流，已进入冷却', 429);
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw AveException('AVE_UPSTREAM', 'AVE 行情请求未成功: HTTP ${response.statusCode}', response.statusCode);
+      throw AveException('AVE_UPSTREAM',
+          'AVE 行情请求未成功: HTTP ${response.statusCode}', response.statusCode);
     }
 
     dynamic body;
@@ -155,11 +157,13 @@ class AveClient {
   }
 
   /// Trending tokens
-  Future<Map<String, dynamic>> trending(String chain, {int page = 0, int pageSize = 100}) async {
+  Future<Map<String, dynamic>> trending(String chain,
+      {int page = 0, int pageSize = 100}) async {
     final apiChain = aveChains[chain];
     if (apiChain == null) throw AveException('AVE_INPUT', '不支持的链: $chain');
 
-    final path = '/v2/tokens/trending?chain=$apiChain&current_page=$page&page_size=$pageSize';
+    final path =
+        '/v2/tokens/trending?chain=$apiChain&current_page=$page&page_size=$pageSize';
     final raw = await _get(path);
     final capturedAt = DateTime.now().millisecondsSinceEpoch;
 
@@ -169,23 +173,31 @@ class AveClient {
     if (data == null) throw AveException('AVE_SCHEMA', 'AVE trending 数据结构不匹配');
 
     final tokens = data['tokens'];
-    if (tokens is! List) throw AveException('AVE_SCHEMA', 'AVE trending tokens 缺失');
+    if (tokens is! List) {
+      throw AveException('AVE_SCHEMA', 'AVE trending tokens 缺失');
+    }
 
     final rows = <Map<String, dynamic>>[];
     for (final item in tokens) {
       if (item is! Map) continue;
-      final rawToken = item['token']?.toString() ?? item['address']?.toString() ?? '';
+      final rawToken =
+          item['token']?.toString() ?? item['address']?.toString() ?? '';
       final ca = normalizeTokenAddress(chain, rawToken);
       if (ca == null) continue;
 
       final price = _numeric(item['current_price_usd']);
       if (price == null || price <= 0) continue;
 
-      final mainPair = normalizePoolAddress(chain, item['main_pair']?.toString());
+      final mainPair =
+          normalizePoolAddress(chain, item['main_pair']?.toString());
       final sampledAt = _upstreamTime(item['updated_at']);
-      final expiresAt = sampledAt == null ? null : capturedAt + limits.detailsTtlMs;
-      final launchedAt = _seconds(item['launch_at']) ?? _seconds(item['created_at']);
-      final ageBasis = item['launch_at'] != null ? 'launch' : (item['created_at'] != null ? 'token' : null);
+      final expiresAt =
+          sampledAt == null ? null : capturedAt + limits.detailsTtlMs;
+      final launchedAt =
+          _seconds(item['launch_at']) ?? _seconds(item['created_at']);
+      final ageBasis = item['launch_at'] != null
+          ? 'launch'
+          : (item['created_at'] != null ? 'token' : null);
 
       final row = {
         'address': ca,
@@ -204,20 +216,25 @@ class AveClient {
         'marketCapCapturedAt': capturedAt,
         'marketCapExpiresAt': expiresAt,
         'liquidity': _numeric(item['main_pair_tvl']) ?? _numeric(item['tvl']),
-        'liquidityBasis': item['main_pair_tvl'] != null ? 'main_pair_tvl' : (item['tvl'] != null ? 'token_tvl' : null),
+        'liquidityBasis': item['main_pair_tvl'] != null
+            ? 'main_pair_tvl'
+            : (item['tvl'] != null ? 'token_tvl' : null),
         'creation_timestamp': launchedAt,
         'launch_at': _seconds(item['launch_at']),
         'token_created_at': _seconds(item['created_at']),
         'ageBasis': ageBasis,
         'volume_5m': _numeric(item['token_tx_volume_usd_5m']),
-        'buy_volume_5m': _numeric(item['token_buy_volume_u_5m']) ?? _numeric(item['token_buy_tx_volume_usd_5m']),
-        'sell_volume_5m': _numeric(item['token_sell_volume_u_5m']) ?? _numeric(item['token_sell_tx_volume_usd_5m']),
+        'buy_volume_5m': _numeric(item['token_buy_volume_u_5m']) ??
+            _numeric(item['token_buy_tx_volume_usd_5m']),
+        'sell_volume_5m': _numeric(item['token_sell_volume_u_5m']) ??
+            _numeric(item['token_sell_tx_volume_usd_5m']),
         'swaps_5m': _numeric(item['token_tx_count_5m'])?.toInt(),
         'buys_5m': _numeric(item['token_buy_tx_count_5m'])?.toInt(),
         'sells_5m': _numeric(item['token_sell_tx_count_5m'])?.toInt(),
-        'price_change_percent5m': _signedNumeric(item['token_price_change_5m']) == null
-            ? null
-            : _signedNumeric(item['token_price_change_5m'])! / 100.0,
+        'price_change_percent5m':
+            _signedNumeric(item['token_price_change_5m']) == null
+                ? null
+                : _signedNumeric(item['token_price_change_5m'])! / 100.0,
         'rug_ratio': null,
         'bundler_rate': null,
         'rat_trader_amount_rate': null,
@@ -228,7 +245,9 @@ class AveClient {
         'sampledAt': sampledAt,
         'expiresAt': expiresAt,
         'stale': false,
-        'identityBasis': item['token'] == null && item['address'] == null ? 'request_path' : 'response',
+        'identityBasis': item['token'] == null && item['address'] == null
+            ? 'request_path'
+            : 'response',
         'aveUrl': 'https://pro.ave.ai/token/$ca-$apiChain?ref=0001',
       };
       rows.add(row);
@@ -242,7 +261,8 @@ class AveClient {
   }
 
   /// Token details + pairs list
-  Future<Map<String, dynamic>> tokenDetails(String chain, String tokenAddress) async {
+  Future<Map<String, dynamic>> tokenDetails(
+      String chain, String tokenAddress) async {
     final apiChain = aveChains[chain];
     if (apiChain == null) throw AveException('AVE_INPUT', '不支持的链: $chain');
     final ca = normalizeTokenAddress(chain, tokenAddress);
@@ -252,7 +272,8 @@ class AveClient {
     final raw = await _get(path);
     final capturedAt = DateTime.now().millisecondsSinceEpoch;
 
-    final data = (raw['status'] == 1 && raw['data'] is Map) ? raw['data'] as Map : raw;
+    final data =
+        (raw['status'] == 1 && raw['data'] is Map) ? raw['data'] as Map : raw;
     final token = data['token'] is Map ? data['token'] as Map : null;
     if (token == null) throw AveException('AVE_SCHEMA', 'AVE token details 缺失');
 
@@ -281,7 +302,8 @@ class AveClient {
   }
 
   /// Single pool / pair details
-  Future<Map<String, dynamic>> pairDetails(String chain, String pairAddress) async {
+  Future<Map<String, dynamic>> pairDetails(
+      String chain, String pairAddress) async {
     final apiChain = aveChains[chain];
     if (apiChain == null) throw AveException('AVE_INPUT', '不支持的链: $chain');
     final pair = normalizePoolAddress(chain, pairAddress);
@@ -291,12 +313,19 @@ class AveClient {
     final raw = await _get(path);
     final capturedAt = DateTime.now().millisecondsSinceEpoch;
 
-    final data = (raw['status'] == 1 && raw['data'] is Map) ? raw['data'] as Map : raw;
-    final token0 = normalizeTokenAddress(chain, data['token0_address']?.toString());
-    final token1 = normalizeTokenAddress(chain, data['token1_address']?.toString());
-    final target = normalizeTokenAddress(chain, data['target_token']?.toString());
+    final data =
+        (raw['status'] == 1 && raw['data'] is Map) ? raw['data'] as Map : raw;
+    final token0 =
+        normalizeTokenAddress(chain, data['token0_address']?.toString());
+    final token1 =
+        normalizeTokenAddress(chain, data['token1_address']?.toString());
+    final target =
+        normalizeTokenAddress(chain, data['target_token']?.toString());
 
-    if (token0 == null || token1 == null || token0 == token1 || target == null) {
+    if (token0 == null ||
+        token1 == null ||
+        token0 == token1 ||
+        target == null) {
       throw AveException('AVE_SCHEMA', '交易对 token0/token1 数据不完整');
     }
 
@@ -339,17 +368,20 @@ class AveClient {
   }
 
   /// 1-minute K-lines for token
-  Future<Map<String, dynamic>> tokenKlines(String chain, String tokenAddress, {int interval = 1, int limit = 60}) async {
+  Future<Map<String, dynamic>> tokenKlines(String chain, String tokenAddress,
+      {int interval = 1, int limit = 60}) async {
     final apiChain = aveChains[chain];
     if (apiChain == null) throw AveException('AVE_INPUT', '不支持的链: $chain');
     final ca = normalizeTokenAddress(chain, tokenAddress);
     if (ca == null) throw AveException('AVE_INPUT', '无效的代币地址: $tokenAddress');
 
-    final path = '/v2/klines/token/$ca-$apiChain?interval=$interval&limit=$limit';
+    final path =
+        '/v2/klines/token/$ca-$apiChain?interval=$interval&limit=$limit';
     final raw = await _get(path);
     final capturedAt = DateTime.now().millisecondsSinceEpoch;
 
-    final data = (raw['status'] == 1 && raw['data'] is Map) ? raw['data'] as Map : raw;
+    final data =
+        (raw['status'] == 1 && raw['data'] is Map) ? raw['data'] as Map : raw;
     final points = data['points'];
     if (points is! List) throw AveException('AVE_SCHEMA', 'K线 points 缺失');
 
@@ -363,7 +395,9 @@ class AveClient {
       final low = _numeric(p['low']);
       final close = _numeric(p['close']);
       final volume = _numeric(p['volume']) ?? 0.0;
-      if (open == null || high == null || low == null || close == null) continue;
+      if (open == null || high == null || low == null || close == null) {
+        continue;
+      }
 
       list.add({
         'time': t * 1000,
@@ -381,12 +415,14 @@ class AveClient {
       'address': ca,
       'list': list,
       'capturedAt': capturedAt,
-      'sourceUpdatedAt': list.isNotEmpty ? (list.last['time'] as int) + 60000 : null,
+      'sourceUpdatedAt':
+          list.isNotEmpty ? (list.last['time'] as int) + 60000 : null,
     };
   }
 
   /// High-level discover & enrichment method matching upstream
-  Future<List<Map<String, dynamic>>> discover(String chain, {int limit = 6, bool enrichPairs = true}) async {
+  Future<List<Map<String, dynamic>>> discover(String chain,
+      {int limit = 6, bool enrichPairs = true}) async {
     final trendingRes = await trending(chain);
     final rows = List<Map<String, dynamic>>.from(trendingRes['rows'] as List);
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -411,22 +447,28 @@ class AveClient {
     return rows;
   }
 
-  Map<String, dynamic> _applyPairMarket(Map<String, dynamic> row, Map<String, dynamic> pair, int now) {
+  Map<String, dynamic> _applyPairMarket(
+      Map<String, dynamic> row, Map<String, dynamic> pair, int now) {
     final address = row['address']?.toString() ?? '';
     final target = pair['target_token']?.toString();
     final token0 = pair['token0_address']?.toString();
     final token1 = pair['token1_address']?.toString();
 
-    if (pair['chain'] != row['chain'] || target != address || (token0 != address && token1 != address)) {
+    if (pair['chain'] != row['chain'] ||
+        target != address ||
+        (token0 != address && token1 != address)) {
       return row;
     }
 
-    final price = token0 == address ? (pair['token0_price_usd'] as num?) : (pair['token1_price_usd'] as num?);
+    final price = token0 == address
+        ? (pair['token0_price_usd'] as num?)
+        : (pair['token1_price_usd'] as num?);
     if (price == null || price <= 0) return row;
 
     final capturedAt = pair['capturedAt'] as int? ?? now;
     final sampledAt = pair['sourceUpdatedAt'] as int?;
-    final expiresAt = sampledAt == null ? null : sampledAt + limits.detailsTtlMs;
+    final expiresAt =
+        sampledAt == null ? null : sampledAt + limits.detailsTtlMs;
 
     final updated = Map<String, dynamic>.from(row);
     updated['price'] = price.toDouble();
@@ -450,7 +492,8 @@ class AveClient {
     updated['buy_volume_5m'] = pair['buy_volume_u_5m'];
     updated['sell_volume_5m'] = pair['sell_volume_u_5m'];
     if (pair['price_change_5m'] != null) {
-      updated['price_change_percent5m'] = (pair['price_change_5m'] as num).toDouble() / 100.0;
+      updated['price_change_percent5m'] =
+          (pair['price_change_5m'] as num).toDouble() / 100.0;
     }
     updated['buys_24h'] = pair['buys_tx_24h_count'];
     updated['sells_24h'] = pair['sells_tx_24h_count'];

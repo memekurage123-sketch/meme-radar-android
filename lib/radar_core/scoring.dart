@@ -5,7 +5,8 @@ import 'chart_risk.dart';
 import 'config.dart';
 import 'pool_identity.dart';
 
-final _numberPattern = RegExp(r'^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$', caseSensitive: false);
+final _numberPattern = RegExp(r'^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$',
+    caseSensitive: false);
 
 double? optionalNumber(dynamic value) {
   if (value == null) return null;
@@ -70,7 +71,8 @@ bool? optionalBoolean(dynamic value) {
   return null;
 }
 
-double numVal(dynamic value, [double fallback = 0]) => optionalNumber(value) ?? fallback;
+double numVal(dynamic value, [double fallback = 0]) =>
+    optionalNumber(value) ?? fallback;
 
 dynamic first(List<dynamic> values) {
   for (final value in values) {
@@ -98,7 +100,11 @@ List<String> normalizeTags(List<dynamic> values) {
         ? value
         : (value is String ? value.split(RegExp(r'[,;|]')) : const []);
     for (final row in rows) {
-      final normalized = row.toString().trim().toLowerCase().replaceAll(RegExp(r'[\s-]+'), '_');
+      final normalized = row
+          .toString()
+          .trim()
+          .toLowerCase()
+          .replaceAll(RegExp(r'[\s-]+'), '_');
       if (normalized.isNotEmpty) tags.add(normalized);
     }
   }
@@ -133,8 +139,12 @@ TaggedWalletSignals taggedWalletSignals(dynamic holders, String chain) {
   }
   final allTagSets = wallets.values.toList();
   return TaggedWalletSignals(
-    smartWallets: allTagSets.where((tags) => tags.any((tag) => _smartTags.contains(tag))).length,
-    renownedWallets: allTagSets.where((tags) => tags.any((tag) => _renownedTags.contains(tag))).length,
+    smartWallets: allTagSets
+        .where((tags) => tags.any((tag) => _smartTags.contains(tag)))
+        .length,
+    renownedWallets: allTagSets
+        .where((tags) => tags.any((tag) => _renownedTags.contains(tag)))
+        .length,
     sampledTaggedWallets: allTagSets.where((tags) => tags.isNotEmpty).length,
   );
 }
@@ -186,10 +196,14 @@ DiscoverySignals discoverySignalView([Map<String, dynamic> row = const {}]) {
   final renownedCount = optionalCount(row['renowned_count']);
   final holders = optionalCount(row['holder_count']);
   final ave = row['marketProvider'] == 'AVE';
-  final swaps5m = optionalCount(ave ? row['swaps_5m'] : first([row['swaps_5m'], row['swaps']]));
-  final buys5m = optionalCount(ave ? row['buys_5m'] : first([row['buys_5m'], row['buys']]));
-  final sells5m = optionalCount(ave ? row['sells_5m'] : first([row['sells_5m'], row['sells']]));
-  final volume5m = optionalNonNegativeNumber(ave ? row['volume_5m'] : first([row['volume_5m'], row['volume']]));
+  final swaps5m = optionalCount(
+      ave ? row['swaps_5m'] : first([row['swaps_5m'], row['swaps']]));
+  final buys5m = optionalCount(
+      ave ? row['buys_5m'] : first([row['buys_5m'], row['buys']]));
+  final sells5m = optionalCount(
+      ave ? row['sells_5m'] : first([row['sells_5m'], row['sells']]));
+  final volume5m = optionalNonNegativeNumber(
+      ave ? row['volume_5m'] : first([row['volume_5m'], row['volume']]));
   final priceChange5m = optionalSignedRate(first([
     row['price_change_percent5m'],
     row['price_change_percent_5m'],
@@ -233,7 +247,9 @@ double createdAt(Map<String, dynamic> row) {
       row['first_trade_at'],
       row['pool_created_at'],
       row['launch_at'],
-      (row['ageBasis'] == 'launch' || row['ageBasis'] == 'token') ? row['creation_timestamp'] : null,
+      (row['ageBasis'] == 'launch' || row['ageBasis'] == 'token')
+          ? row['creation_timestamp']
+          : null,
     ]));
   }
   return numVal(first([
@@ -294,7 +310,8 @@ class FreshAvePoolTrajectory {
   });
 }
 
-FreshAvePoolTrajectory? freshAvePoolTrajectory(Map<String, dynamic> row, String chain, int now) {
+FreshAvePoolTrajectory? freshAvePoolTrajectory(
+    Map<String, dynamic> row, String chain, int now) {
   final identity = verifiedAvePoolEvidence(row, chain, requireRowPair: true);
   if (identity == null) return null;
   final pool = identity.pool;
@@ -408,18 +425,25 @@ class DiscoveryScreenResult {
       };
 }
 
-List<String> knownRiskReasons(Map<String, dynamic> row, RadarConfig config, {double? strictLiquidity}) {
+List<String> knownRiskReasons(Map<String, dynamic> row, RadarConfig config,
+    {double? strictLiquidity}) {
   final reasons = <String>[];
   final lp = optionalNumber(row['liquidity']);
   final buy = optionalRate(row['buy_tax']);
   final sell = optionalRate(row['sell_tax']);
-  final dev = optionalRate(first([row['dev_team_hold_rate'], row['creator_balance_rate'], row['creator_hold_rate']]));
+  final dev = optionalRate(first([
+    row['dev_team_hold_rate'],
+    row['creator_balance_rate'],
+    row['creator_hold_rate']
+  ]));
   final strictLp = strictLiquidity ?? config.strictLiquidity;
 
   if (lp != null && lp < strictLp) reasons.add('流动性低于深审门槛');
   if ((buy != null && buy > config.maxBuyTax) ||
       (sell != null && sell > config.maxSellTax) ||
-      (buy != null && sell != null && (buy - sell).abs() > config.maxTaxAsymmetry)) {
+      (buy != null &&
+          sell != null &&
+          (buy - sell).abs() > config.maxTaxAsymmetry)) {
     reasons.add('交易税超过风险门槛');
   }
   if (dev != null && dev > 0.01) reasons.add('DEV持仓超过1%');
@@ -427,17 +451,22 @@ List<String> knownRiskReasons(Map<String, dynamic> row, RadarConfig config, {dou
   return reasons;
 }
 
-DiscoveryScreenResult aveDiscoveryScreen(Map<String, dynamic> row, RadarConfig config, [double? nowSecParam]) {
+DiscoveryScreenResult aveDiscoveryScreen(
+    Map<String, dynamic> row, RadarConfig config,
+    [double? nowSecParam]) {
   final nowSec = nowSecParam ?? DateTime.now().millisecondsSinceEpoch / 1000.0;
   final now = (nowSec * 1000).toInt();
   final chain = config.chain;
 
   final mcValue = optionalNonNegativeNumber(row['market_cap']);
   final liquidityValue = optionalNonNegativeNumber(row['liquidity']);
-  final poolIdentity = verifiedAvePoolEvidence(row, chain, requireRowPair: true);
+  final poolIdentity =
+      verifiedAvePoolEvidence(row, chain, requireRowPair: true);
   final poolMarket = verifiedPoolMarket(row, chain, now);
 
-  final tradeAt = poolIdentity != null ? optionalNumber(poolIdentity.pool['first_trade_at'])?.toInt() : null;
+  final tradeAt = poolIdentity != null
+      ? optionalNumber(poolIdentity.pool['first_trade_at'])?.toInt()
+      : null;
   final poolAt = poolIdentity != null
       ? optionalNumber(poolIdentity.pool['created_at'])?.toInt()
       : poolMarket?.source == 'DEXSCREENER'
@@ -471,13 +500,18 @@ DiscoveryScreenResult aveDiscoveryScreen(Map<String, dynamic> row, RadarConfig c
   final liquidity = liquidityValue ?? 0.0;
   final volume = optionalNonNegativeNumber(row['volume_5m']);
 
-  final reasons = knownRiskReasons(row, config, strictLiquidity: config.minLiquidity);
+  final reasons =
+      knownRiskReasons(row, config, strictLiquidity: config.minLiquidity);
 
   final rowAddress = row['address']?.toString() ?? '';
-  if (row['chain'] != chain || !validAddressForChain(rowAddress, chain) || RegExp(r'^0x(?:0{40}|e{40})$', caseSensitive: false).hasMatch(rowAddress)) {
+  if (row['chain'] != chain ||
+      !validAddressForChain(rowAddress, chain) ||
+      RegExp(r'^0x(?:0{40}|e{40})$', caseSensitive: false)
+          .hasMatch(rowAddress)) {
     reasons.add('链或代币地址不匹配');
   }
-  if (optionalNumber(row['price']) == null || optionalNumber(row['price'])! <= 0) {
+  if (optionalNumber(row['price']) == null ||
+      optionalNumber(row['price'])! <= 0) {
     reasons.add('价格数据未知');
   }
 
@@ -494,7 +528,8 @@ DiscoveryScreenResult aveDiscoveryScreen(Map<String, dynamic> row, RadarConfig c
       sourceUpdatedAt > capturedAt ||
       now - capturedAt > 60000 ||
       now - sourceUpdatedAt > 60000 ||
-      (row.containsKey('expiresAt') && (expiresAt == null || expiresAt <= now))) {
+      (row.containsKey('expiresAt') &&
+          (expiresAt == null || expiresAt <= now))) {
     reasons.add('AVE 行情已过期或原始时间未核验');
   }
 
@@ -528,7 +563,8 @@ DiscoveryScreenResult aveDiscoveryScreen(Map<String, dynamic> row, RadarConfig c
 
   if (mcValue == null) {
     reasons.add('市值数据未知');
-  } else if (!(mc >= config.discoveryMinMarketCap && mc <= config.discoveryMaxMarketCap)) {
+  } else if (!(mc >= config.discoveryMinMarketCap &&
+      mc <= config.discoveryMaxMarketCap)) {
     reasons.add('市值不在发现范围');
   }
 
@@ -542,9 +578,12 @@ DiscoveryScreenResult aveDiscoveryScreen(Map<String, dynamic> row, RadarConfig c
     reasons.add('近5分钟成交额不足或未知');
   }
 
-  if (volume != null && liquidityValue != null && ageSec >= config.matureMarketAgeSec) {
+  if (volume != null &&
+      liquidityValue != null &&
+      ageSec >= config.matureMarketAgeSec) {
     final old = ageSec >= config.oldMarketAgeSec;
-    final absolute = old ? config.minOldVolume5mUsd : config.minMatureVolume5mUsd;
+    final absolute =
+        old ? config.minOldVolume5mUsd : config.minMatureVolume5mUsd;
     final turnover = old ? config.minOldTurnover5m : config.minMatureTurnover5m;
     final activityVolume = poolMarket?.volume5m ?? volume;
     final activityLiquidity = poolMarket?.liquidity ?? liquidity;
@@ -570,21 +609,26 @@ DiscoveryScreenResult aveDiscoveryScreen(Map<String, dynamic> row, RadarConfig c
       trajectory.athRatio != null &&
       mature &&
       trajectory.athRatio! <= config.maxCollapsedAthRatio &&
-      !(trajectory.change1h != null && trajectory.change1h! > config.strongRebound1h)) {
+      !(trajectory.change1h != null &&
+          trajectory.change1h! > config.strongRebound1h)) {
     reasons.add('距历史高点跌幅过深且未出现强势反弹');
   } else if (trajectory != null && mature && !trajectory.evidenceFresh) {
     reasons.add('池历史轨迹已过期，等待更新');
   }
 
   for (final field in ['buy_volume_5m', 'sell_volume_5m']) {
-    if (row[field] != null && (optionalNonNegativeNumber(row[field]) == null || optionalNonNegativeNumber(row[field])! <= 0)) {
+    if (row[field] != null &&
+        (optionalNonNegativeNumber(row[field]) == null ||
+            optionalNonNegativeNumber(row[field])! <= 0)) {
       reasons.add(field == 'buy_volume_5m' ? '近5分钟买入额不足或未核验' : '近5分钟卖出额不足或未核验');
     }
   }
 
   if (optionalCount(row['buys_5m']) == 0) reasons.add('近5分钟无买入成交');
   if (optionalCount(row['sells_5m']) == 0) reasons.add('近5分钟无卖出成交');
-  if (optionalBoolean(row['is_honeypot']) == true || row['sellable'] == false || optionalBoolean(row['cannot_sell_all']) == true) {
+  if (optionalBoolean(row['is_honeypot']) == true ||
+      row['sellable'] == false ||
+      optionalBoolean(row['cannot_sell_all']) == true) {
     reasons.add('已知貔貅或卖出受限');
   }
   if (optionalBoolean(row['is_wash_trading']) == true) reasons.add('检测到刷量');
@@ -604,7 +648,8 @@ DiscoveryScreenResult aveDiscoveryScreen(Map<String, dynamic> row, RadarConfig c
   }
 
   final signals = discoverySignalView(row);
-  final priorityBand = mc >= config.priorityMinMarketCap && mc <= config.priorityMaxMarketCap;
+  final priorityBand =
+      mc >= config.priorityMinMarketCap && mc <= config.priorityMaxMarketCap;
   final score = (priorityBand ? 35.0 : 10.0) +
       math.min(25.0, liquidity / 1000.0) +
       math.min(20.0, (volume ?? 0) / 1000.0) +
@@ -613,9 +658,15 @@ DiscoveryScreenResult aveDiscoveryScreen(Map<String, dynamic> row, RadarConfig c
   final unknownFields = <String>[];
   if (optionalRate(row['rug_ratio']) == null) unknownFields.add('rugRatio');
   if (optionalRate(row['bundler_rate']) == null) unknownFields.add('bundler');
-  if (optionalRate(row['rat_trader_amount_rate']) == null) unknownFields.add('insider');
-  if (optionalBoolean(row['is_wash_trading']) == null) unknownFields.add('wash');
-  if (optionalBoolean(row['is_honeypot']) == null) unknownFields.add('honeypot');
+  if (optionalRate(row['rat_trader_amount_rate']) == null) {
+    unknownFields.add('insider');
+  }
+  if (optionalBoolean(row['is_wash_trading']) == null) {
+    unknownFields.add('wash');
+  }
+  if (optionalBoolean(row['is_honeypot']) == null) {
+    unknownFields.add('honeypot');
+  }
 
   final uniqueReasons = reasons.toSet().toList();
   return DiscoveryScreenResult(
@@ -634,17 +685,26 @@ DiscoveryScreenResult aveDiscoveryScreen(Map<String, dynamic> row, RadarConfig c
   );
 }
 
-DiscoveryScreenResult discoveryScreen(Map<String, dynamic> row, RadarConfig config, [double? nowSecParam]) {
+DiscoveryScreenResult discoveryScreen(
+    Map<String, dynamic> row, RadarConfig config,
+    [double? nowSecParam]) {
   if (row['marketProvider'] == 'AVE') {
     return aveDiscoveryScreen(row, config, nowSecParam);
   }
   final nowSec = nowSecParam ?? DateTime.now().millisecondsSinceEpoch / 1000.0;
-  final mcValue = optionalNumber(first([row['market_cap'], row['usd_market_cap'], row['mcp']]));
-  final createdValue = optionalNumber(first([row['creation_timestamp'], row['created_timestamp'], row['open_timestamp']]));
+  final mcValue = optionalNumber(
+      first([row['market_cap'], row['usd_market_cap'], row['mcp']]));
+  final createdValue = optionalNumber(first([
+    row['creation_timestamp'],
+    row['created_timestamp'],
+    row['open_timestamp']
+  ]));
   final liquidityValue = optionalNumber(row['liquidity']);
   final rug = optionalRate(row['rug_ratio']);
-  final bundler = optionalRate(first([row['bundler_rate'], row['bundler_trader_amount_rate']]));
-  final insider = optionalRate(first([row['rat_trader_amount_rate'], row['suspected_insider_hold_rate']]));
+  final bundler = optionalRate(
+      first([row['bundler_rate'], row['bundler_trader_amount_rate']]));
+  final insider = optionalRate(first(
+      [row['rat_trader_amount_rate'], row['suspected_insider_hold_rate']]));
   final wash = optionalBoolean(row['is_wash_trading']);
   final honeypot = optionalBoolean(row['is_honeypot']);
 
@@ -655,7 +715,9 @@ DiscoveryScreenResult discoveryScreen(Map<String, dynamic> row, RadarConfig conf
 
   final reasons = knownRiskReasons(row, config);
 
-  if (!validAddressForChain(row['address'], config.chain)) reasons.add('地址格式异常');
+  if (!validAddressForChain(row['address'], config.chain)) {
+    reasons.add('地址格式异常');
+  }
   if (createdValue == null || created <= 0) {
     reasons.add('创建时间未知');
   } else if (ageSec < config.minAgeSec) {
@@ -666,7 +728,8 @@ DiscoveryScreenResult discoveryScreen(Map<String, dynamic> row, RadarConfig conf
 
   if (mcValue == null) {
     reasons.add('市值数据未知');
-  } else if (!(mc >= config.discoveryMinMarketCap && mc <= config.discoveryMaxMarketCap)) {
+  } else if (!(mc >= config.discoveryMinMarketCap &&
+      mc <= config.discoveryMaxMarketCap)) {
     reasons.add('市值不在发现范围');
   }
 
@@ -708,8 +771,10 @@ DiscoveryScreenResult discoveryScreen(Map<String, dynamic> row, RadarConfig conf
     }
   }
 
-  final priorityBand = mc >= config.priorityMinMarketCap && mc <= config.priorityMaxMarketCap;
-  final volume = numVal(first([row['volume_1h'], row['volume'], row['volume_24h']]));
+  final priorityBand =
+      mc >= config.priorityMinMarketCap && mc <= config.priorityMaxMarketCap;
+  final volume =
+      numVal(first([row['volume_1h'], row['volume'], row['volume_24h']]));
   final holders = numVal(row['holder_count']);
   final signals = discoverySignalView(row);
   final score = (priorityBand ? 35.0 : 10.0) +
@@ -726,7 +791,9 @@ DiscoveryScreenResult discoveryScreen(Map<String, dynamic> row, RadarConfig conf
   if (bundler == null) unknownFields.add('bundler');
   if (insider == null) unknownFields.add('insider');
   if (wash == null) unknownFields.add('wash');
-  if (_lower(config.chain) != 'sol' && honeypot == null) unknownFields.add('honeypot');
+  if (_lower(config.chain) != 'sol' && honeypot == null) {
+    unknownFields.add('honeypot');
+  }
 
   return DiscoveryScreenResult(
     pass: reasons.isEmpty,
@@ -746,26 +813,79 @@ Map<String, dynamic> securityView([
   Map<String, dynamic> discovery = const {},
   Map<String, dynamic> info = const {},
 ]) {
-  final stat = info['stat'] is Map<String, dynamic> ? info['stat'] as Map<String, dynamic> : const {};
-  final dev = info['dev'] is Map<String, dynamic> ? info['dev'] as Map<String, dynamic> : const {};
+  final stat = info['stat'] is Map<String, dynamic>
+      ? info['stat'] as Map<String, dynamic>
+      : const {};
+  final dev = info['dev'] is Map<String, dynamic>
+      ? info['dev'] as Map<String, dynamic>
+      : const {};
   return {
-    'openSource': first([source['open_source'], source['is_open_source'], discovery['open_source'], discovery['is_open_source']]),
-    'ownerRenounced': first([source['owner_renounced'], source['is_renounced'], discovery['owner_renounced'], discovery['is_renounced']]),
+    'openSource': first([
+      source['open_source'],
+      source['is_open_source'],
+      discovery['open_source'],
+      discovery['is_open_source']
+    ]),
+    'ownerRenounced': first([
+      source['owner_renounced'],
+      source['is_renounced'],
+      discovery['owner_renounced'],
+      discovery['is_renounced']
+    ]),
     'honeypot': first([source['is_honeypot'], discovery['is_honeypot']]),
     'buyTax': first([source['buy_tax'], discovery['buy_tax']]),
     'sellTax': first([source['sell_tax'], discovery['sell_tax']]),
     'rugRatio': first([source['rug_ratio'], discovery['rug_ratio']]),
-    'top10': first([source['top_10_holder_rate'], discovery['top_10_holder_rate'], stat['top_10_holder_rate'], dev['top_10_holder_rate']]),
-    'devHold': first([source['dev_team_hold_rate'], source['creator_balance_rate'], discovery['dev_team_hold_rate'], discovery['creator_balance_rate'], stat['dev_team_hold_rate'], stat['creator_hold_rate']]),
-    'creatorStatus': first([source['creator_token_status'], discovery['creator_token_status'], dev['creator_token_status']]),
-    'insider': first([source['suspected_insider_hold_rate'], source['rat_trader_amount_rate'], discovery['rat_trader_amount_rate'], stat['top_rat_trader_percentage']]),
-    'bundler': first([source['bundler_trader_amount_rate'], discovery['bundler_rate'], discovery['bundler_trader_amount_rate'], stat['top_bundler_trader_percentage']]),
-    'sniperHold': first([source['top70_sniper_hold_rate'], discovery['top70_sniper_hold_rate']]),
+    'top10': first([
+      source['top_10_holder_rate'],
+      discovery['top_10_holder_rate'],
+      stat['top_10_holder_rate'],
+      dev['top_10_holder_rate']
+    ]),
+    'devHold': first([
+      source['dev_team_hold_rate'],
+      source['creator_balance_rate'],
+      discovery['dev_team_hold_rate'],
+      discovery['creator_balance_rate'],
+      stat['dev_team_hold_rate'],
+      stat['creator_hold_rate']
+    ]),
+    'creatorStatus': first([
+      source['creator_token_status'],
+      discovery['creator_token_status'],
+      dev['creator_token_status']
+    ]),
+    'insider': first([
+      source['suspected_insider_hold_rate'],
+      source['rat_trader_amount_rate'],
+      discovery['rat_trader_amount_rate'],
+      stat['top_rat_trader_percentage']
+    ]),
+    'bundler': first([
+      source['bundler_trader_amount_rate'],
+      discovery['bundler_rate'],
+      discovery['bundler_trader_amount_rate'],
+      stat['top_bundler_trader_percentage']
+    ]),
+    'sniperHold': first([
+      source['top70_sniper_hold_rate'],
+      discovery['top70_sniper_hold_rate']
+    ]),
     'wash': first([source['is_wash_trading'], discovery['is_wash_trading']]),
     'burnStatus': first([source['burn_status'], discovery['burn_status']]),
-    'lockRate': first([source['lock_percent'], source['locked_ratio'], discovery['lock_percent'], discovery['locked_ratio'], info['locked_ratio']]),
-    'renouncedMint': first([source['renounced_mint'], discovery['renounced_mint']]),
-    'renouncedFreezeAccount': first([source['renounced_freeze_account'], discovery['renounced_freeze_account']]),
+    'lockRate': first([
+      source['lock_percent'],
+      source['locked_ratio'],
+      discovery['lock_percent'],
+      discovery['locked_ratio'],
+      info['locked_ratio']
+    ]),
+    'renouncedMint':
+        first([source['renounced_mint'], discovery['renounced_mint']]),
+    'renouncedFreezeAccount': first([
+      source['renounced_freeze_account'],
+      discovery['renounced_freeze_account']
+    ]),
   };
 }
 
@@ -828,17 +948,19 @@ AnalyzeWalletsResult analyzeWallets(dynamic holders, RadarConfig config) {
       missingAddressCount += 1;
       continue;
     }
-    final current = grouped.putIfAbsent(address, () => {
-      'address': address,
-      'addrTypes': <double?>[],
-      'tags': <String>{},
-      'holdRates': <double>[],
-      'invalidHoldRate': false,
-      'isNewValues': <bool?>[],
-      'suspiciousValues': <bool?>[],
-      'buyTxCounts': <double?>[],
-      'sources': <String>{},
-    });
+    final current = grouped.putIfAbsent(
+        address,
+        () => {
+              'address': address,
+              'addrTypes': <double?>[],
+              'tags': <String>{},
+              'holdRates': <double>[],
+              'invalidHoldRate': false,
+              'isNewValues': <bool?>[],
+              'suspiciousValues': <bool?>[],
+              'buyTxCounts': <double?>[],
+              'sources': <String>{},
+            });
 
     final addrType = optionalNumber(row['addr_type']);
     (current['addrTypes'] as List<double?>).add(addrType);
@@ -851,11 +973,16 @@ AnalyzeWalletsResult analyzeWallets(dynamic holders, RadarConfig config) {
       (current['holdRates'] as List<double>).add(holdRate);
     }
     (current['isNewValues'] as List<bool?>).add(optionalBoolean(row['is_new']));
-    (current['suspiciousValues'] as List<bool?>).add(optionalBoolean(row['is_suspicious']));
-    (current['buyTxCounts'] as List<double?>).add(optionalNumber(row['buy_tx_count_cur']));
+    (current['suspiciousValues'] as List<bool?>)
+        .add(optionalBoolean(row['is_suspicious']));
+    (current['buyTxCounts'] as List<double?>)
+        .add(optionalNumber(row['buy_tx_count_cur']));
 
-    final nativeTransfer = row['native_transfer'] is Map ? row['native_transfer'] as Map : null;
-    final source = normalizeAddress(first([nativeTransfer?['from_address'], nativeTransfer?['address']]), config.chain);
+    final nativeTransfer =
+        row['native_transfer'] is Map ? row['native_transfer'] as Map : null;
+    final source = normalizeAddress(
+        first([nativeTransfer?['from_address'], nativeTransfer?['address']]),
+        config.chain);
     if (source.isNotEmpty) {
       (current['sources'] as Set<String>).add(source);
     }
@@ -870,13 +997,27 @@ AnalyzeWalletsResult analyzeWallets(dynamic holders, RadarConfig config) {
 
     return {
       'address': row['address'],
-      'addrTypeKnown': addrTypes.isNotEmpty && addrTypes.every((v) => v != null),
+      'addrTypeKnown':
+          addrTypes.isNotEmpty && addrTypes.every((v) => v != null),
       'regular': addrTypes.isNotEmpty && addrTypes.every((v) => v == 0),
       'tags': (row['tags'] as Set<String>).toList(),
-      'holdRate': (row['invalidHoldRate'] == true || holdRates.isEmpty) ? null : holdRates.reduce(math.max),
-      'isNew': isNewValues.contains(true) ? true : isNewValues.every((v) => v == false) ? false : null,
-      'suspicious': suspiciousValues.contains(true) ? true : suspiciousValues.every((v) => v == false) ? false : null,
-      'buyTxCount': (buyTxCounts.isNotEmpty && buyTxCounts.every((v) => v != null)) ? buyTxCounts.whereType<double>().reduce(math.max) : null,
+      'holdRate': (row['invalidHoldRate'] == true || holdRates.isEmpty)
+          ? null
+          : holdRates.reduce(math.max),
+      'isNew': isNewValues.contains(true)
+          ? true
+          : isNewValues.every((v) => v == false)
+              ? false
+              : null,
+      'suspicious': suspiciousValues.contains(true)
+          ? true
+          : suspiciousValues.every((v) => v == false)
+              ? false
+              : null,
+      'buyTxCount':
+          (buyTxCounts.isNotEmpty && buyTxCounts.every((v) => v != null))
+              ? buyTxCounts.whereType<double>().reduce(math.max)
+              : null,
       'sources': (row['sources'] as Set<String>).toList(),
     };
   }).toList();
@@ -884,7 +1025,8 @@ AnalyzeWalletsResult analyzeWallets(dynamic holders, RadarConfig config) {
   final regular = normalized.where((row) => row['regular'] == true).toList();
   final taggedRisk = regular.where((row) {
     final tags = row['tags'] as List<String>;
-    return tags.any((tag) => _riskTags.contains(tag)) || row['suspicious'] == true;
+    return tags.any((tag) => _riskTags.contains(tag)) ||
+        row['suspicious'] == true;
   }).toList();
 
   final ordinary = regular.where((row) {
@@ -899,11 +1041,13 @@ AnalyzeWalletsResult analyzeWallets(dynamic holders, RadarConfig config) {
         !tags.any((tag) => _riskTags.contains(tag));
   }).toList();
 
-  final invalidRateCount = regular.where((row) => row['holdRate'] == null).length;
+  final invalidRateCount =
+      regular.where((row) => row['holdRate'] == null).length;
   final riskRateUnknown = taggedRisk.any((row) => row['holdRate'] == null);
   final botHoldRate = riskRateUnknown
       ? null
-      : taggedRisk.fold<double>(0.0, (sum, row) => sum + (row['holdRate'] as double? ?? 0.0));
+      : taggedRisk.fold<double>(
+          0.0, (sum, row) => sum + (row['holdRate'] as double? ?? 0.0));
 
   final sourceGroups = <String, List<Map<String, dynamic>>>{};
   for (final row in regular) {
@@ -913,7 +1057,10 @@ AnalyzeWalletsResult analyzeWallets(dynamic holders, RadarConfig config) {
     }
   }
 
-  final linked = sourceGroups.values.where((group) => group.length >= 2).expand((g) => g).toList();
+  final linked = sourceGroups.values
+      .where((group) => group.length >= 2)
+      .expand((g) => g)
+      .toList();
   final uniqueLinkedMap = <String, Map<String, dynamic>>{};
   for (final row in linked) {
     uniqueLinkedMap[row['address'] as String] = row;
@@ -922,16 +1069,26 @@ AnalyzeWalletsResult analyzeWallets(dynamic holders, RadarConfig config) {
   final linkedRateUnknown = uniqueLinked.any((row) => row['holdRate'] == null);
   final linkedHoldRate = linkedRateUnknown
       ? null
-      : uniqueLinked.fold<double>(0.0, (sum, row) => sum + (row['holdRate'] as double? ?? 0.0));
-  final ordinaryHoldRate = ordinary.fold<double>(0.0, (sum, row) => sum + (row['holdRate'] as double? ?? 0.0));
+      : uniqueLinked.fold<double>(
+          0.0, (sum, row) => sum + (row['holdRate'] as double? ?? 0.0));
+  final ordinaryHoldRate = ordinary.fold<double>(
+      0.0, (sum, row) => sum + (row['holdRate'] as double? ?? 0.0));
 
   final unknownFields = <String>[];
   if (missingAddressCount > 0) unknownFields.add('holders.address');
-  if (normalized.any((row) => row['addrTypeKnown'] != true)) unknownFields.add('holders.addrType');
+  if (normalized.any((row) => row['addrTypeKnown'] != true)) {
+    unknownFields.add('holders.addrType');
+  }
   if (invalidRateCount > 0) unknownFields.add('holders.amountPercentage');
-  if (regular.any((row) => row['isNew'] == null)) unknownFields.add('holders.isNew');
-  if (regular.any((row) => row['suspicious'] == null)) unknownFields.add('holders.isSuspicious');
-  if (regular.any((row) => row['buyTxCount'] == null)) unknownFields.add('holders.buyTxCount');
+  if (regular.any((row) => row['isNew'] == null)) {
+    unknownFields.add('holders.isNew');
+  }
+  if (regular.any((row) => row['suspicious'] == null)) {
+    unknownFields.add('holders.isSuspicious');
+  }
+  if (regular.any((row) => row['buyTxCount'] == null)) {
+    unknownFields.add('holders.buyTxCount');
+  }
 
   final dataComplete = unknownFields.isEmpty;
   final pass = dataComplete &&
@@ -959,7 +1116,10 @@ AnalyzeWalletsResult analyzeWallets(dynamic holders, RadarConfig config) {
 
 String normalizedCreatorStatus(dynamic value) {
   final status = _lower(value).trim();
-  if (['creator_close', 'close', 'closed', 'sell', 'sold', 'exited'].contains(status)) return 'EXITED';
+  if (['creator_close', 'close', 'closed', 'sell', 'sold', 'exited']
+      .contains(status)) {
+    return 'EXITED';
+  }
   if (['creator_hold', 'hold', 'holding'].contains(status)) return 'HOLDING';
   return 'UNKNOWN';
 }
@@ -996,25 +1156,42 @@ MarketBehaviorResult marketBehaviorScreen(
   final price = info['price'] is Map ? info['price'] as Map : const {};
   final tagEvidence = taggedWalletSignals(holders, config.chain);
 
-  final walletTagsStat = info['wallet_tags_stat'] is Map ? info['wallet_tags_stat'] as Map : const {};
-  final aggregateSmart = optionalCount(first([walletTagsStat['smart_wallets'], discovery['smart_degen_count']]));
-  final aggregateRenowned = optionalCount(first([walletTagsStat['renowned_wallets'], discovery['renowned_count']]));
+  final walletTagsStat = info['wallet_tags_stat'] is Map
+      ? info['wallet_tags_stat'] as Map
+      : const {};
+  final aggregateSmart = optionalCount(
+      first([walletTagsStat['smart_wallets'], discovery['smart_degen_count']]));
+  final aggregateRenowned = optionalCount(
+      first([walletTagsStat['renowned_wallets'], discovery['renowned_count']]));
   final smartKnown = aggregateSmart != null || tagEvidence.smartWallets > 0;
-  final renownedKnown = aggregateRenowned != null || tagEvidence.renownedWallets > 0;
-  final smartWallets = smartKnown ? math.max(aggregateSmart ?? 0, tagEvidence.smartWallets) : null;
-  final renownedWallets = renownedKnown ? math.max(aggregateRenowned ?? 0, tagEvidence.renownedWallets) : null;
+  final renownedKnown =
+      aggregateRenowned != null || tagEvidence.renownedWallets > 0;
+  final smartWallets = smartKnown
+      ? math.max(aggregateSmart ?? 0, tagEvidence.smartWallets)
+      : null;
+  final renownedWallets = renownedKnown
+      ? math.max(aggregateRenowned ?? 0, tagEvidence.renownedWallets)
+      : null;
 
   final stat = info['stat'] is Map ? info['stat'] as Map : const {};
   final dev = info['dev'] is Map ? info['dev'] as Map : const {};
-  final holderCount = optionalCount(first([info['holder_count'], stat['holder_count'], discovery['holder_count']]));
-  final swaps5m = optionalCount(first([price['swaps_5m'], discovery['swaps_5m'], discovery['swaps']]));
-  final buys5m = optionalCount(first([price['buys_5m'], discovery['buys_5m'], discovery['buys']]));
-  final sells5m = optionalCount(first([price['sells_5m'], discovery['sells_5m'], discovery['sells']]));
-  final volume5m = optionalNonNegativeNumber(first([price['volume_5m'], discovery['volume_5m'], discovery['volume']]));
+  final holderCount = optionalCount(first(
+      [info['holder_count'], stat['holder_count'], discovery['holder_count']]));
+  final swaps5m = optionalCount(
+      first([price['swaps_5m'], discovery['swaps_5m'], discovery['swaps']]));
+  final buys5m = optionalCount(
+      first([price['buys_5m'], discovery['buys_5m'], discovery['buys']]));
+  final sells5m = optionalCount(
+      first([price['sells_5m'], discovery['sells_5m'], discovery['sells']]));
+  final volume5m = optionalNonNegativeNumber(
+      first([price['volume_5m'], discovery['volume_5m'], discovery['volume']]));
 
   final currentPrice = optionalNumber(price['price']);
   final priorPrice5m = optionalNumber(price['price_5m']);
-  final calculatedPriceChange = currentPrice != null && currentPrice > 0 && priorPrice5m != null && priorPrice5m > 0
+  final calculatedPriceChange = currentPrice != null &&
+          currentPrice > 0 &&
+          priorPrice5m != null &&
+          priorPrice5m > 0
       ? currentPrice / priorPrice5m - 1
       : null;
   final priceChange5m = optionalSignedRate(first([
@@ -1031,39 +1208,59 @@ MarketBehaviorResult marketBehaviorScreen(
     discovery['creation_timestamp'],
     discovery['created_timestamp'],
   ]));
-  final ageSec = (created != null && created > 0) ? (now / 1000.0 - created) : null;
+  final ageSec =
+      (created != null && created > 0) ? (now / 1000.0 - created) : null;
 
-  final creatorStatus = normalizedCreatorStatus(first([dev['creator_token_status'], discovery['creator_token_status']]));
+  final creatorStatus = normalizedCreatorStatus(
+      first([dev['creator_token_status'], discovery['creator_token_status']]));
   final creatorCreatedCount = optionalCount(discovery['creator_created_count']);
-  final creatorGraduatedCount = optionalCount(discovery['creator_created_open_count']);
-  final creatorLaunchCount = optionalCount(first([dev['creator_open_count'], creatorCreatedCount]));
+  final creatorGraduatedCount =
+      optionalCount(discovery['creator_created_open_count']);
+  final creatorLaunchCount =
+      optionalCount(first([dev['creator_open_count'], creatorCreatedCount]));
   final creatorOpenRatio = creatorCreatedCount != null &&
           creatorCreatedCount > 0 &&
           creatorGraduatedCount != null &&
           creatorGraduatedCount <= creatorCreatedCount
       ? creatorGraduatedCount / creatorCreatedCount
       : null;
-  final creatorDeletedPosts = optionalCount(dev['twitter_del_post_token_count']);
-  final creatorPromotedTokens = optionalCount(dev['twitter_create_token_count']);
+  final creatorDeletedPosts =
+      optionalCount(dev['twitter_del_post_token_count']);
+  final creatorPromotedTokens =
+      optionalCount(dev['twitter_create_token_count']);
 
   final txTotal = (buys5m != null && sells5m != null) ? buys5m + sells5m : null;
   final swapCountConsistent = (swaps5m == null || txTotal == null)
       ? null
       : (swaps5m - txTotal).abs() <= math.max(2, (swaps5m * 0.05).ceil());
-  final swapsPerHolder5m = (swaps5m != null && holderCount != null && holderCount > 0) ? (swaps5m / holderCount) : null;
+  final swapsPerHolder5m =
+      (swaps5m != null && holderCount != null && holderCount > 0)
+          ? (swaps5m / holderCount)
+          : null;
 
   final holderList = holders is List ? holders : const [];
   final holderSampleDistinct = holderList
-      .map((row) => row is Map ? normalizeAddress(row['address'], config.chain) : '')
+      .map((row) =>
+          row is Map ? normalizeAddress(row['address'], config.chain) : '')
       .where((s) => s.isNotEmpty)
       .toSet()
       .length;
-  final holderSampleConsistent = (holderCount == null || holderSampleDistinct == 0) ? null : holderCount >= holderSampleDistinct;
+  final holderSampleConsistent =
+      (holderCount == null || holderSampleDistinct == 0)
+          ? null
+          : holderCount >= holderSampleDistinct;
   final sellBuyRatio = (buys5m != null && sells5m != null)
-      ? (buys5m > 0 ? (sells5m / buys5m) : sells5m == 0 ? 0.0 : null)
+      ? (buys5m > 0
+          ? (sells5m / buys5m)
+          : sells5m == 0
+              ? 0.0
+              : null)
       : null;
 
-  final kolOnly = smartWallets != null && smartWallets <= 1 && renownedWallets != null && renownedWallets > 0;
+  final kolOnly = smartWallets != null &&
+      smartWallets <= 1 &&
+      renownedWallets != null &&
+      renownedWallets > 0;
   final activityHolderMismatch = swaps5m != null &&
       swaps5m >= 100 &&
       swapsPerHolder5m != null &&
@@ -1076,7 +1273,10 @@ MarketBehaviorResult marketBehaviorScreen(
       sells5m != null &&
       sells5m >= 20 &&
       (buys5m == 0 || (sellBuyRatio != null && sellBuyRatio >= 1.5));
-  final oldSuddenPump = ageSec != null && ageSec >= 24 * 60 * 60 && priceChange5m != null && priceChange5m >= 0.35;
+  final oldSuddenPump = ageSec != null &&
+      ageSec >= 24 * 60 * 60 &&
+      priceChange5m != null &&
+      priceChange5m >= 0.35;
   final fadingPump = observation?.pass == true &&
       optionalSignedRate(observation?.return5m) != null &&
       observation!.return5m >= 0.10 &&
@@ -1090,12 +1290,16 @@ MarketBehaviorResult marketBehaviorScreen(
               creatorPromotedTokens != null &&
               creatorPromotedTokens > 0 &&
               (creatorDeletedPosts / creatorPromotedTokens) >= 0.50));
-  final repeatLauncherStillHolding = creatorLaunchCount != null && creatorLaunchCount >= 10 && creatorStatus == 'HOLDING';
+  final repeatLauncherStillHolding = creatorLaunchCount != null &&
+      creatorLaunchCount >= 10 &&
+      creatorStatus == 'HOLDING';
 
   final downgradeReasons = <String>[];
   if (kolOnly) downgradeReasons.add('仅见KOL钱包，未见至少2个独立聪明钱钱包');
   if (swapCountConsistent == false) downgradeReasons.add('5分钟买卖笔数与总交换数不一致');
-  if (holderSampleConsistent == false) downgradeReasons.add('持有人总数小于已返回的独立钱包样本');
+  if (holderSampleConsistent == false) {
+    downgradeReasons.add('持有人总数小于已返回的独立钱包样本');
+  }
   if (activityHolderMismatch) downgradeReasons.add('5分钟交易笔数与持有人数量严重不匹配');
   if (distributionFlow) downgradeReasons.add('短时上涨同时卖单显著压过买单，疑似分发阶段');
   if (oldSuddenPump) downgradeReasons.add('老盘5分钟突然大幅拉升，等待避免追高');
@@ -1104,16 +1308,22 @@ MarketBehaviorResult marketBehaviorScreen(
   if (repeatLauncherStillHolding) downgradeReasons.add('创建者反复发币且当前仍持币');
 
   final warnings = <String>[];
-  if (creatorLaunchCount != null && creatorLaunchCount >= 10) warnings.add('创建者历史发币$creatorLaunchCount个');
+  if (creatorLaunchCount != null && creatorLaunchCount >= 10) {
+    warnings.add('创建者历史发币$creatorLaunchCount个');
+  }
   if (creatorStatus == 'UNKNOWN') warnings.add('创建者当前持币状态未知');
 
   final strengths = <String>[];
-  if (smartWallets != null && smartWallets >= 3) strengths.add('$smartWallets个聪明钱钱包形成多钱包验证');
+  if (smartWallets != null && smartWallets >= 3) {
+    strengths.add('$smartWallets个聪明钱钱包形成多钱包验证');
+  }
   if (smartWallets == 2) strengths.add('2个聪明钱钱包，只有轻度加分');
 
   final unknownFields = <String>[];
   if (smartWallets == null) unknownFields.add('marketBehavior.smartWallets');
-  if (renownedWallets == null) unknownFields.add('marketBehavior.renownedWallets');
+  if (renownedWallets == null) {
+    unknownFields.add('marketBehavior.renownedWallets');
+  }
   if (holderCount == null) unknownFields.add('marketBehavior.holderCount');
   if (swaps5m == null) unknownFields.add('marketBehavior.swaps5m');
   if (buys5m == null) unknownFields.add('marketBehavior.buys5m');
@@ -1121,7 +1331,9 @@ MarketBehaviorResult marketBehaviorScreen(
   if (volume5m == null) unknownFields.add('marketBehavior.volume5m');
   if (priceChange5m == null) unknownFields.add('marketBehavior.priceChange5m');
   if (ageSec == null) unknownFields.add('marketBehavior.age');
-  if (creatorLaunchCount == null) unknownFields.add('marketBehavior.creatorLaunchCount');
+  if (creatorLaunchCount == null) {
+    unknownFields.add('marketBehavior.creatorLaunchCount');
+  }
 
   return MarketBehaviorResult(
     pass: downgradeReasons.isEmpty,
@@ -1205,7 +1417,8 @@ class ObserveFiveMinutesResult {
   });
 }
 
-ObserveFiveMinutesResult observeFiveMinutes(dynamic candles, [int? nowMsParam]) {
+ObserveFiveMinutesResult observeFiveMinutes(dynamic candles,
+    [int? nowMsParam]) {
   final nowMs = nowMsParam ?? DateTime.now().millisecondsSinceEpoch;
   final source = candles is List ? candles : const [];
   final parsed = source.map((raw) {
@@ -1220,29 +1433,32 @@ ObserveFiveMinutesResult observeFiveMinutes(dynamic candles, [int? nowMsParam]) 
     };
   }).toList();
 
-  final valid = parsed.where((row) {
-    if (row == null) return false;
-    final time = row['time'];
-    final open = row['open'];
-    final high = row['high'];
-    final low = row['low'];
-    final close = row['close'];
-    final volume = row['volume'];
-    return time != null &&
-        time > 0 &&
-        open != null &&
-        open > 0 &&
-        high != null &&
-        high > 0 &&
-        low != null &&
-        low > 0 &&
-        close != null &&
-        close > 0 &&
-        volume != null &&
-        volume >= 0 &&
-        high >= math.max(open, close) &&
-        low <= math.min(open, close);
-  }).map((e) => e!).toList();
+  final valid = parsed
+      .where((row) {
+        if (row == null) return false;
+        final time = row['time'];
+        final open = row['open'];
+        final high = row['high'];
+        final low = row['low'];
+        final close = row['close'];
+        final volume = row['volume'];
+        return time != null &&
+            time > 0 &&
+            open != null &&
+            open > 0 &&
+            high != null &&
+            high > 0 &&
+            low != null &&
+            low > 0 &&
+            close != null &&
+            close > 0 &&
+            volume != null &&
+            volume >= 0 &&
+            high >= math.max(open, close) &&
+            low <= math.min(open, close);
+      })
+      .map((e) => e!)
+      .toList();
 
   final invalidBars = source.length - valid.length;
   final uniqueMap = <double, Map<String, dynamic>>{};
@@ -1277,7 +1493,9 @@ ObserveFiveMinutesResult observeFiveMinutes(dynamic candles, [int? nowMsParam]) 
   final end = firstFive.last['close'] as double;
   final gapsMs = <int>[];
   for (var i = 1; i < firstFive.length; i++) {
-    final gap = ((firstFive[i]['time'] as double) - (firstFive[i - 1]['time'] as double)).toInt();
+    final gap = ((firstFive[i]['time'] as double) -
+            (firstFive[i - 1]['time'] as double))
+        .toInt();
     gapsMs.add(gap);
   }
   final continuous = gapsMs.every((gap) => (gap - 60000).abs() <= 1000);
@@ -1331,10 +1549,13 @@ ObserveFiveMinutesResult observeFiveMinutes(dynamic candles, [int? nowMsParam]) 
 
   final volumes = firstFive.map((row) => row['volume'] as double).toList();
   final totalVolume = volumes.fold<double>(0.0, (a, b) => a + b);
-  final volumeConcentration = totalVolume > 0 ? (volumes.reduce(math.max) / totalVolume) : 1.0;
+  final volumeConcentration =
+      totalVolume > 0 ? (volumes.reduce(math.max) / totalVolume) : 1.0;
   final earlyVolume = (volumes[0] + volumes[1]) / 2.0;
   final recentVolume = (volumes[volumes.length - 2] + volumes.last) / 2.0;
-  final volumeChange = earlyVolume > 0 ? (recentVolume / earlyVolume - 1.0) : (recentVolume > 0 ? null : 0.0);
+  final volumeChange = earlyVolume > 0
+      ? (recentVolume / earlyVolume - 1.0)
+      : (recentVolume > 0 ? null : 0.0);
   final volumeTrend = volumeChange == null
       ? 'UNKNOWN'
       : volumeChange > 0.15
@@ -1431,8 +1652,10 @@ EmpiricalSellabilityResult empiricalSellability({
 }) {
   final nowSec = nowSecParam ?? DateTime.now().millisecondsSinceEpoch / 1000.0;
   final price = info['price'] is Map ? info['price'] as Map : const {};
-  final sells5m = optionalNumber(first([price['sells_5m'], discovery['sells_5m'], discovery['sells']]));
-  final sells24h = optionalNumber(first([price['sells_24h'], discovery['sells_24h']]));
+  final sells5m = optionalNumber(
+      first([price['sells_5m'], discovery['sells_5m'], discovery['sells']]));
+  final sells24h =
+      optionalNumber(first([price['sells_24h'], discovery['sells_24h']]));
 
   final unique = <String, Map<String, dynamic>>{};
   final list = traders is List ? traders : const [];
@@ -1441,21 +1664,27 @@ EmpiricalSellabilityResult empiricalSellability({
     final address = normalizeAddress(row['address'], chain);
     if (address.isEmpty) continue;
     final sellTxCount = optionalNumber(row['sell_tx_count_cur']);
-    final lastActiveAt = _unixSeconds(first([row['last_active_timestamp'], row['last_active_at']]));
-    final previous = unique[address] ?? {'address': address, 'sellTxCount': null, 'lastActiveAt': null};
+    final lastActiveAt = _unixSeconds(
+        first([row['last_active_timestamp'], row['last_active_at']]));
+    final previous = unique[address] ??
+        {'address': address, 'sellTxCount': null, 'lastActiveAt': null};
 
     final prevTx = previous['sellTxCount'] as double?;
     final prevAct = previous['lastActiveAt'] as double?;
 
     unique[address] = {
       'address': address,
-      'sellTxCount': sellTxCount == null ? prevTx : math.max(prevTx ?? 0.0, sellTxCount),
-      'lastActiveAt': lastActiveAt == null ? prevAct : math.max(prevAct ?? 0.0, lastActiveAt),
+      'sellTxCount':
+          sellTxCount == null ? prevTx : math.max(prevTx ?? 0.0, sellTxCount),
+      'lastActiveAt': lastActiveAt == null
+          ? prevAct
+          : math.max(prevAct ?? 0.0, lastActiveAt),
     };
   }
 
   final historicalSellers = unique.values
-      .where((row) => row['sellTxCount'] != null && (row['sellTxCount'] as double) > 0)
+      .where((row) =>
+          row['sellTxCount'] != null && (row['sellTxCount'] as double) > 0)
       .toList();
   final recentActiveSellers = historicalSellers.where((row) {
     final act = row['lastActiveAt'] as double?;
@@ -1472,7 +1701,10 @@ EmpiricalSellabilityResult empiricalSellability({
     unknownFields.add('sellability.traderLastActiveAt');
   }
 
-  final pass = unknownFields.isEmpty && (sells5m != null && sells5m >= 2) && (sells24h != null && sells24h >= 10) && distinctSellers >= 5;
+  final pass = unknownFields.isEmpty &&
+      (sells5m != null && sells5m >= 2) &&
+      (sells24h != null && sells24h >= 10) &&
+      distinctSellers >= 5;
 
   return EmpiricalSellabilityResult(
     pass: pass,
@@ -1522,9 +1754,15 @@ DeepScreenResult deepScreen(
   int? nowMsParam,
 }) {
   final nowMs = nowMsParam ?? DateTime.now().millisecondsSinceEpoch;
-  final info = audit['info'] is Map ? Map<String, dynamic>.from(audit['info'] as Map) : const <String, dynamic>{};
-  final pool = audit['pool'] is Map ? Map<String, dynamic>.from(audit['pool'] as Map) : const <String, dynamic>{};
-  final secAudit = audit['security'] is Map ? Map<String, dynamic>.from(audit['security'] as Map) : const <String, dynamic>{};
+  final info = audit['info'] is Map
+      ? Map<String, dynamic>.from(audit['info'] as Map)
+      : const <String, dynamic>{};
+  final pool = audit['pool'] is Map
+      ? Map<String, dynamic>.from(audit['pool'] as Map)
+      : const <String, dynamic>{};
+  final secAudit = audit['security'] is Map
+      ? Map<String, dynamic>.from(audit['security'] as Map)
+      : const <String, dynamic>{};
   final sec = securityView(secAudit, discovery, info);
 
   final isSol = _lower(config.chain) == 'sol';
@@ -1542,7 +1780,8 @@ DeepScreenResult deepScreen(
   final bundler = optionalRate(sec['bundler']);
   final sniperHold = optionalRate(sec['sniperHold']);
   final wash = optionalBoolean(sec['wash']);
-  final liquidityValue = optionalNumber(first([pool['liquidity'], info['liquidity'], discovery['liquidity']]));
+  final liquidityValue = optionalNumber(
+      first([pool['liquidity'], info['liquidity'], discovery['liquidity']]));
   final liquidity = liquidityValue ?? 0.0;
   final lockRate = optionalRate(first([sec['lockRate'], info['locked_ratio']]));
   final lpBurned = _lower(sec['burnStatus']) == 'burn';
@@ -1571,9 +1810,13 @@ DeepScreenResult deepScreen(
 
   final checks = <String, bool>{
     'openSource': openSource == true,
-    'ownerRenounced': isSol ? (renouncedMint == true && renouncedFreezeAccount == true) : (ownerRenounced == true),
-    'lpLocked': lpBurned || (lockRate != null && lockRate >= config.minLpLockedRate),
-    'notHoneypot': isSol || exactNotHoneypot || (!explicitHoneypot && sellability.pass),
+    'ownerRenounced': isSol
+        ? (renouncedMint == true && renouncedFreezeAccount == true)
+        : (ownerRenounced == true),
+    'lpLocked':
+        lpBurned || (lockRate != null && lockRate >= config.minLpLockedRate),
+    'notHoneypot':
+        isSol || exactNotHoneypot || (!explicitHoneypot && sellability.pass),
     'tax': buyTax != null &&
         sellTax != null &&
         buyTax <= config.maxBuyTax &&
@@ -1593,7 +1836,8 @@ DeepScreenResult deepScreen(
     'marketBehavior': marketBehavior.pass,
   };
 
-  final failed = checks.entries.where((e) => !e.value).map((e) => e.key).toList();
+  final failed =
+      checks.entries.where((e) => !e.value).map((e) => e.key).toList();
   final chainPass = failed.isEmpty;
   final honeypotEvidence = isSol
       ? 'SOL不使用EVM貔貅字段；以铸币和冻结权限为安全基线'
@@ -1609,7 +1853,9 @@ DeepScreenResult deepScreen(
   if (openSource == null) unknownFields.add('openSource');
   if (!isSol && ownerRenounced == null) unknownFields.add('ownerRenounced');
   if (isSol && renouncedMint == null) unknownFields.add('renouncedMint');
-  if (isSol && renouncedFreezeAccount == null) unknownFields.add('renouncedFreezeAccount');
+  if (isSol && renouncedFreezeAccount == null) {
+    unknownFields.add('renouncedFreezeAccount');
+  }
   if (!isSol && honeypot == null) unknownFields.add('honeypot');
   if (buyTax == null) unknownFields.add('buyTax');
   if (sellTax == null) unknownFields.add('sellTax');
@@ -1631,10 +1877,18 @@ DeepScreenResult deepScreen(
 
   final blockingUnknownFields = <String>[];
   if (openSource == null) blockingUnknownFields.add('openSource');
-  if (!isSol && ownerRenounced == null) blockingUnknownFields.add('ownerRenounced');
-  if (isSol && renouncedMint == null) blockingUnknownFields.add('renouncedMint');
-  if (isSol && renouncedFreezeAccount == null) blockingUnknownFields.add('renouncedFreezeAccount');
-  if (!isSol && honeypot == null && !sellability.pass) blockingUnknownFields.add('honeypot');
+  if (!isSol && ownerRenounced == null) {
+    blockingUnknownFields.add('ownerRenounced');
+  }
+  if (isSol && renouncedMint == null) {
+    blockingUnknownFields.add('renouncedMint');
+  }
+  if (isSol && renouncedFreezeAccount == null) {
+    blockingUnknownFields.add('renouncedFreezeAccount');
+  }
+  if (!isSol && honeypot == null && !sellability.pass) {
+    blockingUnknownFields.add('honeypot');
+  }
   if (buyTax == null) blockingUnknownFields.add('buyTax');
   if (sellTax == null) blockingUnknownFields.add('sellTax');
   if (rugRatio == null) blockingUnknownFields.add('rugRatio');
@@ -1669,14 +1923,17 @@ DeepScreenResult deepScreen(
     blockingUnknownFields: blockingUnknownFields.toSet().toList(),
     security: {
       'openSource': openSource,
-      'ownerRenounced': isSol ? (renouncedMint == true && renouncedFreezeAccount == true) : ownerRenounced,
+      'ownerRenounced': isSol
+          ? (renouncedMint == true && renouncedFreezeAccount == true)
+          : ownerRenounced,
       'evmOwnerRenounced': ownerRenounced,
       'renouncedMint': renouncedMint,
       'renouncedFreezeAccount': renouncedFreezeAccount,
       'honeypot': honeypot,
       'buyTax': buyTax,
       'sellTax': sellTax,
-      'taxDifference': (buyTax != null && sellTax != null) ? (buyTax - sellTax).abs() : null,
+      'taxDifference':
+          (buyTax != null && sellTax != null) ? (buyTax - sellTax).abs() : null,
       'rugRatio': rugRatio,
       'top10': top10,
       'devHold': devHold,

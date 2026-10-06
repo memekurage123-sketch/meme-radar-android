@@ -19,7 +19,8 @@ class FakeStorageService extends StorageService {
   @override
   Future<String> getSelectedChain([String fallback = 'bsc']) async {
     final chain = _data['selected_chain'];
-    if (chain != null && ['sol', 'bsc', 'base', 'eth', 'robinhood'].contains(chain)) {
+    if (chain != null &&
+        ['sol', 'bsc', 'base', 'eth', 'robinhood'].contains(chain)) {
       return chain;
     }
     return fallback;
@@ -41,7 +42,7 @@ void main() {
 
     // Test changing to each chain
     final chains = ['sol', 'bsc', 'base', 'eth', 'robinhood'];
-    
+
     for (final chain in chains) {
       service.setChain(chain);
       expect(service.activeChain, chain, reason: 'Failed to switch to $chain');

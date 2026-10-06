@@ -1,6 +1,6 @@
 name: meme_radar_android
 description: Standalone Meme Radar Android core and application.
-version: 0.1.0-beta.1+1
+version: 1.0.1+4
 publish_to: none
 
 environment:
@@ -16,6 +16,8 @@ dependencies:
   flutter_secure_storage: ^11.2.0
   flutter_foreground_task: ^11.0.3
   flutter_local_notifications: ^22.3.1
+  webview_flutter: ^4.10.0
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
@@ -25,3 +27,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/

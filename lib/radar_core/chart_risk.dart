@@ -12,7 +12,9 @@ double? _parseNumber(dynamic value) {
   }
   if (value is String) {
     final trimmed = value.trim();
-    if (!RegExp(r'^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$', caseSensitive: false).hasMatch(trimmed)) {
+    if (!RegExp(r'^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$',
+            caseSensitive: false)
+        .hasMatch(trimmed)) {
       return null;
     }
     final parsed = double.tryParse(trimmed);
@@ -92,7 +94,8 @@ class ChartRiskResult {
         'pass': pass,
         'status': status,
         'unknownFields': unknownFields,
-        if (maxConfirmedDrawdown != null) 'maxConfirmedDrawdown': maxConfirmedDrawdown,
+        if (maxConfirmedDrawdown != null)
+          'maxConfirmedDrawdown': maxConfirmedDrawdown,
       };
 }
 
@@ -117,7 +120,8 @@ ChartRiskResult chartRiskScreen(dynamic candles, [int? nowMs]) {
     final high = _parseNumber(raw is Map ? (raw['high'] ?? raw['h']) : null);
     final low = _parseNumber(raw is Map ? (raw['low'] ?? raw['l']) : null);
     final close = _parseNumber(raw is Map ? (raw['close'] ?? raw['c']) : null);
-    final volume = _parseNumber(raw is Map ? (raw['volume'] ?? raw['v']) : null);
+    final volume =
+        _parseNumber(raw is Map ? (raw['volume'] ?? raw['v']) : null);
 
     if (time == null ||
         time <= 0 ||
@@ -143,7 +147,13 @@ ChartRiskResult chartRiskScreen(dynamic candles, [int? nowMs]) {
       continue;
     }
 
-    final bar = CandleBar(time: time, open: open, high: high, low: low, close: close, volume: volume);
+    final bar = CandleBar(
+        time: time,
+        open: open,
+        high: high,
+        low: low,
+        close: close,
+        volume: volume);
     final old = rows[time];
     if (old != null && old != bar) {
       conflict = true;
@@ -237,7 +247,8 @@ extension _ListPush<T> on List<T> {
   void push(T value) => add(value);
 }
 
-Map<String, dynamic> applyRiskExclusion(Map<String, dynamic> row, [Map<String, dynamic> exclusions = const {}, String? chainOverride]) {
+Map<String, dynamic> applyRiskExclusion(Map<String, dynamic> row,
+    [Map<String, dynamic> exclusions = const {}, String? chainOverride]) {
   final chain = chainOverride ?? (row['chain']?.toString() ?? '');
   final address = (row['address']?.toString() ?? '').trim();
   final key = '$chain:${chain == 'sol' ? address : address.toLowerCase()}';
@@ -245,12 +256,15 @@ Map<String, dynamic> applyRiskExclusion(Map<String, dynamic> row, [Map<String, d
   if (held == null) return row;
 
   final heldMap = held is Map<String, dynamic> ? held : <String, dynamic>{};
-  final reasons = (heldMap['reasons'] as List?)?.map((e) => e.toString()).toList() ?? [];
+  final reasons =
+      (heldMap['reasons'] as List?)?.map((e) => e.toString()).toList() ?? [];
 
   final deep = Map<String, dynamic>.from(row['deep'] as Map? ?? {});
   final checks = Map<String, dynamic>.from(deep['checks'] as Map? ?? {});
   checks['chartRisk'] = false;
-  final failed = Set<String>.from((deep['failed'] as List?)?.map((e) => e.toString()) ?? [])..add('chartRisk');
+  final failed = Set<String>.from(
+      (deep['failed'] as List?)?.map((e) => e.toString()) ?? [])
+    ..add('chartRisk');
 
   final chartRisk = Map<String, dynamic>.from(heldMap);
   chartRisk['status'] = 'REJECT';

@@ -12,7 +12,8 @@ void main() {
     test('下一周期 Candidate A 仍存在 -> 不重复 notify', () {
       final deduper = NotificationDeduper({'sol_TokenA': 1000});
       // Next cycle, say 5 mins later
-      final shouldNotify = deduper.shouldNotify('sol', 'TokenA', 1000 + 5 * 60 * 1000);
+      final shouldNotify =
+          deduper.shouldNotify('sol', 'TokenA', 1000 + 5 * 60 * 1000);
       expect(shouldNotify, false);
     });
 
@@ -27,14 +28,16 @@ void main() {
 
     test('同 address 不同 chain -> 视为不同 Candidate', () {
       final deduper = NotificationDeduper({'sol_TokenA': 1000});
-      final notifyDiffChain = deduper.shouldNotify('bsc', 'TokenA', 1000 + 5 * 60 * 1000);
+      final notifyDiffChain =
+          deduper.shouldNotify('bsc', 'TokenA', 1000 + 5 * 60 * 1000);
       expect(notifyDiffChain, true);
     });
 
     test('超过 2h cooldown 后 A 再次 LIVE_READY -> 可以再次 notify', () {
       final deduper = NotificationDeduper({'sol_TokenA': 1000});
       final twoHoursAndOneMs = 1000 + (2 * 60 * 60 * 1000) + 1;
-      final shouldNotify = deduper.shouldNotify('sol', 'TokenA', twoHoursAndOneMs);
+      final shouldNotify =
+          deduper.shouldNotify('sol', 'TokenA', twoHoursAndOneMs);
       expect(shouldNotify, true);
     });
 

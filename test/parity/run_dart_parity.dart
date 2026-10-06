@@ -7,7 +7,8 @@ import 'package:meme_radar_android/radar_core/scoring.dart';
 
 void main() {
   final fixturesFile = File('test/parity/fixtures.json');
-  final fixtures = jsonDecode(fixturesFile.readAsStringSync()) as Map<String, dynamic>;
+  final fixtures =
+      jsonDecode(fixturesFile.readAsStringSync()) as Map<String, dynamic>;
 
   final results = {
     'address': <String, dynamic>{},
@@ -82,7 +83,8 @@ void main() {
     final audit = Map<String, dynamic>.from(tc['audit'] as Map);
 
     final conf = RadarConfig(chain: chain);
-    final res = deepScreen(conf, discovery: discovery, audit: audit, nowMsParam: nowMs);
+    final res =
+        deepScreen(conf, discovery: discovery, audit: audit, nowMsParam: nowMs);
     final sortedFailed = List<String>.from(res.failed)..sort();
 
     results['deep_screen']![id] = {
@@ -94,13 +96,16 @@ void main() {
   }
 
   final outFile = File('test/parity/dart_output.json');
-  outFile.writeAsStringSync(const JsonEncoder.withIndent('  ').convert(results));
-  print('Dart parity runner finished successfully. Output written to dart_output.json');
+  outFile
+      .writeAsStringSync(const JsonEncoder.withIndent('  ').convert(results));
+  print(
+      'Dart parity runner finished successfully. Output written to dart_output.json');
 
   // Automated comparison
   final jsFile = File('test/parity/js_output.json');
   if (jsFile.existsSync()) {
-    final jsResults = jsonDecode(jsFile.readAsStringSync()) as Map<String, dynamic>;
+    final jsResults =
+        jsonDecode(jsFile.readAsStringSync()) as Map<String, dynamic>;
     compareResults(jsResults, results);
   }
 }
@@ -141,7 +146,12 @@ void compareResults(Map<String, dynamic> js, Map<String, dynamic> dart) {
   int semanticMatches = 0;
   final businessDifferences = <String>[];
 
-  for (final category in ['address', 'chart_risk', 'discovery', 'deep_screen']) {
+  for (final category in [
+    'address',
+    'chart_risk',
+    'discovery',
+    'deep_screen'
+  ]) {
     final jsGroup = (js[category] as Map<String, dynamic>?) ?? {};
     final dartGroup = (dart[category] as Map<String, dynamic>?) ?? {};
 
@@ -155,7 +165,8 @@ void compareResults(Map<String, dynamic> js, Map<String, dynamic> dart) {
       } else {
         final jsStr = jsonEncode(jsVal);
         final dartStr = jsonEncode(dartVal);
-        businessDifferences.add('[$category][$testId]\n  JS:   $jsStr\n  Dart: $dartStr');
+        businessDifferences
+            .add('[$category][$testId]\n  JS:   $jsStr\n  Dart: $dartStr');
       }
     }
   }

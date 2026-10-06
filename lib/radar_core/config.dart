@@ -147,14 +147,17 @@ class RadarConfig {
       supportedChains: supportedChains ?? this.supportedChains,
       port: port ?? this.port,
       scanIntervalMs: scanIntervalMs ?? this.scanIntervalMs,
-      maxDeepAuditsPerCycle: maxDeepAuditsPerCycle ?? this.maxDeepAuditsPerCycle,
+      maxDeepAuditsPerCycle:
+          maxDeepAuditsPerCycle ?? this.maxDeepAuditsPerCycle,
       auditCycleBudgetMs: auditCycleBudgetMs ?? this.auditCycleBudgetMs,
       outcomeReadsPerCycle: outcomeReadsPerCycle ?? this.outcomeReadsPerCycle,
       xReviewMode: xReviewMode ?? this.xReviewMode,
       minAgeSec: minAgeSec ?? this.minAgeSec,
       maxAgeSec: maxAgeSec ?? this.maxAgeSec,
-      discoveryMinMarketCap: discoveryMinMarketCap ?? this.discoveryMinMarketCap,
-      discoveryMaxMarketCap: discoveryMaxMarketCap ?? this.discoveryMaxMarketCap,
+      discoveryMinMarketCap:
+          discoveryMinMarketCap ?? this.discoveryMinMarketCap,
+      discoveryMaxMarketCap:
+          discoveryMaxMarketCap ?? this.discoveryMaxMarketCap,
       priorityMinMarketCap: priorityMinMarketCap ?? this.priorityMinMarketCap,
       priorityMaxMarketCap: priorityMaxMarketCap ?? this.priorityMaxMarketCap,
       minLiquidity: minLiquidity ?? this.minLiquidity,

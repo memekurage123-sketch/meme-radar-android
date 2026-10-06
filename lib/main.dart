@@ -8,7 +8,7 @@ import 'ui/radar_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   FlutterForegroundTask.initCommunicationPort();
-  
+
   // Request permissions if needed
   if (Platform.isAndroid) {
     FlutterForegroundTask.requestNotificationPermission();

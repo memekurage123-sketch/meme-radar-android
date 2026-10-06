@@ -12,18 +12,24 @@ void main() {
 
     test('valid tokens and pools normalize correctly', () {
       expect(normalizeTokenAddress('sol', sol), equals(sol));
-      expect(normalizeTokenAddress('bsc', evm.toUpperCase().replaceFirst('0X', '0x')), equals(evm));
-      expect(normalizePoolAddress('bsc', '0x${'12' * 32}'), equals('0x${'12' * 32}'));
+      expect(
+          normalizeTokenAddress(
+              'bsc', evm.toUpperCase().replaceFirst('0X', '0x')),
+          equals(evm));
+      expect(normalizePoolAddress('bsc', '0x${'12' * 32}'),
+          equals('0x${'12' * 32}'));
       expect(validTokenAddress('sol', sol), isTrue);
       expect(validTokenAddress('bsc', evm), isTrue);
     });
 
     test('invalid tokens are rejected exactly matching upstream', () {
-      final invalidSol = '2' * 32; // Matches text regex but is not a 32-byte pubkey
+      final invalidSol =
+          '2' * 32; // Matches text regex but is not a 32-byte pubkey
       expect(validTokenAddress('sol', invalidSol), isFalse);
       expect(validTokenAddress('bsc', '0x${'0' * 40}'), isFalse);
       expect(validTokenAddress('eth', '0x${'e' * 40}'), isFalse);
-      expect(normalizeTokenAddress('sol', '1' * 32), isNull); // All 1s is rejected
+      expect(
+          normalizeTokenAddress('sol', '1' * 32), isNull); // All 1s is rejected
     });
   });
 
@@ -53,7 +59,8 @@ void main() {
     List<Map<String, dynamic>> dump(int at) =>
         series([1.0, 0.65, 0.35, 0.18, 0.18, 0.18, 0.18, 0.18, 0.18], at);
 
-    test('pump produces VERTICAL_PLATEAU and dump produces SUSTAINED_COLLAPSE', () {
+    test('pump produces VERTICAL_PLATEAU and dump produces SUSTAINED_COLLAPSE',
+        () {
       final pumpBars = pump(now);
       final pumpObs = observeFiveMinutes(pumpBars, now);
       expect(pumpObs.pass, isTrue);
@@ -65,10 +72,13 @@ void main() {
       expect(pumpRisk.from, equals(pumpBars.first['time']));
 
       // Reversed order is also handled properly
-      expect(chartRiskScreen(pumpBars.reversed.toList(), now).status, equals('REJECT'));
+      expect(chartRiskScreen(pumpBars.reversed.toList(), now).status,
+          equals('REJECT'));
 
       // Seconds timestamp auto-scales to ms
-      final scaledBars = pumpBars.map((b) => {...b, 'time': (b['time'] as int) / 1000.0}).toList();
+      final scaledBars = pumpBars
+          .map((b) => {...b, 'time': (b['time'] as int) / 1000.0})
+          .toList();
       expect(chartRiskScreen(scaledBars, now).status, equals('REJECT'));
 
       final dumpBars = dump(now);
@@ -147,7 +157,8 @@ void main() {
         'poolEvidence': pool,
       };
 
-      final verified = verifiedAvePoolEvidence(row, 'bsc', requireRowPair: true);
+      final verified =
+          verifiedAvePoolEvidence(row, 'bsc', requireRowPair: true);
       expect(verified, isNotNull);
       expect(verified!.pair, equals(pair));
       expect(verified.token, equals(token));
@@ -191,30 +202,40 @@ void main() {
     const config = RadarConfig(chain: 'bsc');
 
     Map<String, dynamic> sampleDiscovery(int at) => {
-      'address': address,
-      'chain': 'bsc',
-      'market_cap': 50000.0,
-      'liquidity': 12000.0,
-      'creation_timestamp': at / 1000 - 600,
-      'rug_ratio': 0.1,
-      'bundler_rate': 0.05,
-      'rat_trader_amount_rate': 0.05,
-      'top70_sniper_hold_rate': 0.02,
-      'is_wash_trading': false,
-      'is_honeypot': false,
-      'volume_1h': 5000.0,
-      'holder_count': 120,
-    };
+          'address': address,
+          'chain': 'bsc',
+          'market_cap': 50000.0,
+          'liquidity': 12000.0,
+          'creation_timestamp': at / 1000 - 600,
+          'rug_ratio': 0.1,
+          'bundler_rate': 0.05,
+          'rat_trader_amount_rate': 0.05,
+          'top70_sniper_hold_rate': 0.02,
+          'is_wash_trading': false,
+          'is_honeypot': false,
+          'volume_1h': 5000.0,
+          'holder_count': 120,
+        };
 
-    test('knownRiskReasons detects low LP, high tax, DEV hold > 1%, zero volume', () {
+    test(
+        'knownRiskReasons detects low LP, high tax, DEV hold > 1%, zero volume',
+        () {
       final base = sampleDiscovery(now);
-      expect(knownRiskReasons({...base, 'liquidity': 3310.0}, config), contains('流动性低于深审门槛'));
-      expect(knownRiskReasons({...base, 'buy_tax': 0.10, 'sell_tax': 0.15}, config), contains('交易税超过风险门槛'));
-      expect(knownRiskReasons({...base, 'dev_team_hold_rate': 0.0803}, config), contains('DEV持仓超过1%'));
-      expect(knownRiskReasons({...base, 'volume_5m': 0.0}, config), contains('近5分钟无成交，暂不进入候选'));
+      expect(knownRiskReasons({...base, 'liquidity': 3310.0}, config),
+          contains('流动性低于深审门槛'));
+      expect(
+          knownRiskReasons(
+              {...base, 'buy_tax': 0.10, 'sell_tax': 0.15}, config),
+          contains('交易税超过风险门槛'));
+      expect(knownRiskReasons({...base, 'dev_team_hold_rate': 0.0803}, config),
+          contains('DEV持仓超过1%'));
+      expect(knownRiskReasons({...base, 'volume_5m': 0.0}, config),
+          contains('近5分钟无成交，暂不进入候选'));
     });
 
-    test('discoveryScreen passes clean token within MC and liquidity boundaries', () {
+    test(
+        'discoveryScreen passes clean token within MC and liquidity boundaries',
+        () {
       final row = sampleDiscovery(now);
       final res = discoveryScreen(row, config, nowSec);
       expect(res.pass, isTrue);
@@ -223,11 +244,16 @@ void main() {
       expect(res.reasons, isEmpty);
     });
 
-    test('discoveryScreen rejects tokens with out-of-range MC or high rug ratio', () {
+    test(
+        'discoveryScreen rejects tokens with out-of-range MC or high rug ratio',
+        () {
       final highRug = {...sampleDiscovery(now), 'rug_ratio': 0.40};
       expect(discoveryScreen(highRug, config, nowSec).pass, isFalse);
 
-      final lowMc = {...sampleDiscovery(now), 'market_cap': 5000.0}; // min is 10000
+      final lowMc = {
+        ...sampleDiscovery(now),
+        'market_cap': 5000.0
+      }; // min is 10000
       expect(discoveryScreen(lowMc, config, nowSec).pass, isFalse);
     });
 
@@ -330,7 +356,8 @@ void main() {
         }
       };
 
-      final deep = deepScreen(config, discovery: discovery, audit: audit, nowMsParam: now);
+      final deep = deepScreen(config,
+          discovery: discovery, audit: audit, nowMsParam: now);
       expect(deep.chainPass, isTrue);
       expect(deep.failed, isEmpty);
       expect(deep.checks['openSource'], isTrue);

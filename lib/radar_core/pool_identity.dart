@@ -1,7 +1,8 @@
 /// Faithful Dart port of upstream `src/pool-identity.mjs` at commit 7ecd342
 import 'address.dart';
 
-final _evmPool = RegExp(r'^0x(?:[0-9a-f]{40}|[0-9a-f]{64})$', caseSensitive: false);
+final _evmPool =
+    RegExp(r'^0x(?:[0-9a-f]{40}|[0-9a-f]{64})$', caseSensitive: false);
 final _solPool = RegExp(r'^[1-9A-HJ-NP-Za-km-z]{32,44}$');
 
 String _clean(dynamic value) => value is String ? value.trim() : '';
@@ -45,17 +46,13 @@ int? _seconds(dynamic value) {
   return null;
 }
 
-bool _freshClock(dynamic capturedAt, dynamic sourceUpdatedAt, dynamic expiresAt, int now) {
+bool _freshClock(
+    dynamic capturedAt, dynamic sourceUpdatedAt, dynamic expiresAt, int now) {
   final c = _finite(capturedAt);
   final s = _finite(sourceUpdatedAt);
   final e = _finite(expiresAt);
   if (c == null || s == null || e == null) return false;
-  return c > 0 &&
-      s > 0 &&
-      e > now &&
-      s <= c &&
-      c <= now &&
-      now - s <= 60000;
+  return c > 0 && s > 0 && e > now && s <= c && c <= now && now - s <= 60000;
 }
 
 class VerifiedAvePoolIdentity {
@@ -158,7 +155,8 @@ VerifiedAvePoolIdentity? verifiedAvePoolEvidence(
   );
 }
 
-VerifiedPoolMarket? verifiedPoolMarket(dynamic row, String chain, [int? nowMs]) {
+VerifiedPoolMarket? verifiedPoolMarket(dynamic row, String chain,
+    [int? nowMs]) {
   if (row is! Map) return null;
   final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
 
@@ -174,7 +172,8 @@ VerifiedPoolMarket? verifiedPoolMarket(dynamic row, String chain, [int? nowMs]) 
         liquidity == null ||
         volume5m == null ||
         createdAt == null ||
-        !_freshClock(row['capturedAt'], row['sourceUpdatedAt'], row['expiresAt'], now)) {
+        !_freshClock(
+            row['capturedAt'], row['sourceUpdatedAt'], row['expiresAt'], now)) {
       return null;
     }
     return VerifiedPoolMarket(
@@ -188,7 +187,8 @@ VerifiedPoolMarket? verifiedPoolMarket(dynamic row, String chain, [int? nowMs]) 
 
   final identity = verifiedAvePoolEvidence(row, chain, requireRowPair: true);
   if (identity == null ||
-      !_freshClock(identity.pool['capturedAt'], identity.pool['sourceUpdatedAt'], identity.pool['expiresAt'], now)) {
+      !_freshClock(identity.pool['capturedAt'],
+          identity.pool['sourceUpdatedAt'], identity.pool['expiresAt'], now)) {
     return null;
   }
 

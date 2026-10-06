@@ -24,7 +24,7 @@ class RadarService extends ChangeNotifier {
   String? _lastError;
   int _scanIntervalSeconds = 300;
   String _sortMethod = 'recent';
-  
+
   List<Map<String, dynamic>> _liveDiscoveryRows = [];
   int _marketQualifiedCount = 0;
   int _scanCount = 0;
@@ -35,7 +35,8 @@ class RadarService extends ChangeNotifier {
       : _storageService = storageService ?? StorageService();
 
   RadarScanStatus get status => _status;
-  bool get isRunning => _status == RadarScanStatus.scanning || _status == RadarScanStatus.idle;
+  bool get isRunning =>
+      _status == RadarScanStatus.scanning || _status == RadarScanStatus.idle;
   bool get isCycleRunning => _status == RadarScanStatus.scanning;
   String get activeChain => _activeChain;
   String get sortMethod => _sortMethod;
@@ -70,7 +71,7 @@ class RadarService extends ChangeNotifier {
     }
     return list;
   }
-  
+
   int get totalDiscovered => _totalDiscovered;
   int get totalPrequalified => _totalPrequalified;
   int get scanCount => _scanCount;
@@ -79,17 +80,17 @@ class RadarService extends ChangeNotifier {
   Future<void> init() async {
     _activeChain = await _storageService.getSelectedChain('bsc');
     _sortMethod = await _storageService.getSortMethod('recent');
-    
+
     _initForegroundTask();
-    
+
     if (await FlutterForegroundTask.isRunningService) {
       _status = RadarScanStatus.idle;
       _requestDataFromTask();
     }
-    
+
     notifyListeners();
   }
-  
+
   void _initForegroundTask() {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
@@ -101,13 +102,14 @@ class RadarService extends ChangeNotifier {
       ),
       iosNotificationOptions: const IOSNotificationOptions(),
       foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(_scanIntervalSeconds * 1000),
+        eventAction:
+            ForegroundTaskEventAction.repeat(_scanIntervalSeconds * 1000),
         autoRunOnBoot: false,
         allowWakeLock: true,
         allowWifiLock: true,
       ),
     );
-    
+
     FlutterForegroundTask.addTaskDataCallback(_onReceiveTaskData);
   }
 
@@ -121,22 +123,25 @@ class RadarService extends ChangeNotifier {
           _totalDiscovered = msg['totalDiscovered'];
           _totalPrequalified = msg['totalPrequalified'];
           _marketQualifiedCount = msg['marketQualifiedCount'];
-          _liveDiscoveryRows = (msg['liveDiscoveryRows'] as List).cast<Map<String, dynamic>>();
-          
+          _liveDiscoveryRows =
+              (msg['liveDiscoveryRows'] as List).cast<Map<String, dynamic>>();
+
           final int cycleDurationMs = msg['lastCycleDurationMs'] ?? 0;
           if (cycleDurationMs > 0) {
             _lastCycleDurationMs = cycleDurationMs;
           }
-          
-          _lastScanTime = DateTime.fromMillisecondsSinceEpoch(msg['lastScanTime']);
+
+          _lastScanTime =
+              DateTime.fromMillisecondsSinceEpoch(msg['lastScanTime']);
           _status = RadarScanStatus.idle;
           _lastError = null;
-          
+
           FlutterForegroundTask.updateService(
             notificationTitle: 'Meme Radar',
-            notificationText: 'Radar is scanning · ${_activeChain.toUpperCase()}',
+            notificationText:
+                'Radar is scanning · ${_activeChain.toUpperCase()}',
           );
-          
+
           notifyListeners();
         } else if (msg['event'] == 'error') {
           _lastError = msg['message'];
@@ -152,13 +157,13 @@ class RadarService extends ChangeNotifier {
   }
 
   void _requestDataFromTask() {
-    FlutterForegroundTask.sendDataToTask(jsonEncode({
-      'action': 'requestState'
-    }));
+    FlutterForegroundTask.sendDataToTask(
+        jsonEncode({'action': 'requestState'}));
   }
 
   void setSortMethod(String method) {
-    if (['recent', 'volume5m', 'priority'].contains(method) && method != _sortMethod) {
+    if (['recent', 'volume5m', 'priority'].contains(method) &&
+        method != _sortMethod) {
       _sortMethod = method;
       _storageService.saveSortMethod(method);
       notifyListeners();
@@ -167,7 +172,8 @@ class RadarService extends ChangeNotifier {
 
   void setChain(String chain) {
     final lower = chain.toLowerCase();
-    if (['sol', 'bsc', 'base', 'eth', 'robinhood'].contains(lower) && lower != _activeChain) {
+    if (['sol', 'bsc', 'base', 'eth', 'robinhood'].contains(lower) &&
+        lower != _activeChain) {
       _activeChain = lower;
       _storageService.saveSelectedChain(lower);
       if (isRunning) {
@@ -176,7 +182,7 @@ class RadarService extends ChangeNotifier {
           'action': 'setChain',
           'chain': lower,
         }));
-        
+
         FlutterForegroundTask.updateService(
           notificationTitle: 'Meme Radar',
           notificationText: 'Radar is scanning · ${_activeChain.toUpperCase()}',
@@ -191,7 +197,8 @@ class RadarService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Map<String, dynamic>> testConnection(String apiKey, [String? chain]) async {
+  Future<Map<String, dynamic>> testConnection(String apiKey,
+      [String? chain]) async {
     final testChain = chain ?? _activeChain;
     final client = AveClient(apiKey: apiKey);
     try {
@@ -229,10 +236,13 @@ class RadarService extends ChangeNotifier {
     _lastError = null;
     _status = RadarScanStatus.scanning;
     notifyListeners();
-    
+
     await FlutterForegroundTask.startService(
       notificationTitle: 'Meme Radar',
       notificationText: 'Radar is scanning · ${_activeChain.toUpperCase()}',
+      notificationIcon: const NotificationIcon(
+        metaDataName: 'ic_stat_radar',
+      ),
       callback: startCallback,
     );
   }
