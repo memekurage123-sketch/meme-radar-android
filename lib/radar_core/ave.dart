@@ -105,6 +105,7 @@ class AveClient {
   final http.Client _client;
   final AveLimits limits;
   final bool _ownsClient;
+  DateTime? _cooldownUntil;
 
   AveClient({
     required this.apiKey,
@@ -123,6 +124,17 @@ class AveClient {
     if (apiKey.trim().isEmpty) {
       throw AveException('AVE_CONFIG', 'AVE 行情凭证未配置');
     }
+
+    if (_cooldownUntil != null) {
+      final now = DateTime.now();
+      if (now.isBefore(_cooldownUntil!)) {
+        final secs = _cooldownUntil!.difference(now).inSeconds;
+        throw AveException('AVE_RATE_LIMITED', 'AVE 触发全局限流，强制休眠中 ($secs 秒)...', 429);
+      } else {
+        _cooldownUntil = null;
+      }
+    }
+
     final uri = Uri.parse('$aveOrigin$path');
     final response = await _client.get(
       uri,
@@ -133,10 +145,11 @@ class AveClient {
     ).timeout(Duration(milliseconds: limits.timeoutMs));
 
     if (response.statusCode == 401 || response.statusCode == 403) {
-      throw AveException('AVE_AUTH', 'AVE 行情凭证或权限未通过', response.statusCode);
+      throw AveException('AVE_AUTH', 'AVE 行情凭证或权限未通过 (HTTP ${response.statusCode})', response.statusCode);
     }
     if (response.statusCode == 429) {
-      throw AveException('AVE_RATE_LIMITED', 'AVE 行情限流，已进入冷却', 429);
+      _cooldownUntil = DateTime.now().add(const Duration(seconds: 90));
+      throw AveException('AVE_RATE_LIMITED', 'AVE 刚刚触发防刷风控，强制休眠 90 秒', 429);
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw AveException('AVE_UPSTREAM',

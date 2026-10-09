@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../radar_core/ave.dart';
+import '../services/bubble_audit_service.dart';
 import 'bubble_sheet.dart';
 import 'kline_chart.dart';
 
@@ -54,6 +56,47 @@ class CandidateCard extends StatefulWidget {
 class _CandidateCardState extends State<CandidateCard> {
   bool _isExpanded = false;
   bool _showKline = false;
+  BubbleAuditResult? _auditResult;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAudit();
+  }
+
+  @override
+  void didUpdateWidget(covariant CandidateCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldAddr = oldWidget.candidate['address']?.toString() ?? '';
+    final newAddr = widget.candidate['address']?.toString() ?? '';
+    if (oldAddr != newAddr) {
+      _auditResult = null;
+      _loadAudit();
+    }
+  }
+
+  void _loadAudit() {
+    final address = widget.candidate['address']?.toString().trim() ?? '';
+    final chain = widget.candidate['chain']?.toString().trim() ?? 'bsc';
+    if (address.isEmpty) return;
+
+    final cached = BubbleAuditService.instance.getCached(address, chain);
+    if (cached != null) {
+      _auditResult = cached;
+      return;
+    }
+
+    BubbleAuditService.instance.auditToken(address, chain).then((res) {
+      debugPrint('BubbleAudit result for $address: loaded=${res.isLoaded}, err=${res.error}, cluster=${res.maxClusterRatio}');
+      if (mounted) {
+        setState(() {
+          _auditResult = res;
+        });
+      }
+    }).catchError((e, st) {
+      debugPrint('BubbleAudit catchError for $address: $e\n$st');
+    });
+  }
 
   String _formatCurrency(dynamic value) {
     if (value == null) return '—';
@@ -233,6 +276,51 @@ class _CandidateCardState extends State<CandidateCard> {
                         ),
                       ),
                     ),
+                  if (_auditResult?.hasClusterWarning == true) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withAlpha(40),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: Colors.redAccent.withAlpha(120),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Text(
+                        '🔴 ${_auditResult!.maxClusterRatio}% 关联',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.redAccent,
+                        ),
+                      ),
+                    ),
+                  ] else if (_auditResult?.hasCabalWarning == true) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withAlpha(40),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: Colors.redAccent.withAlpha(120),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Text(
+                        '⚠️ 阴谋集团 ${_auditResult!.cabalCount}',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.redAccent,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: 8),
@@ -320,6 +408,9 @@ class _CandidateCardState extends State<CandidateCard> {
                     _buildMetric('Holders', holders),
                   ],
                 ),
+                const SizedBox(height: 12),
+                // 第三行：链上深度体检 (老鼠仓/关联, 聪明钱, KOL, Top10)
+                _buildAuditRow(theme),
                 if (pairAddress.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   InkWell(
@@ -476,6 +567,61 @@ class _CandidateCardState extends State<CandidateCard> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildAuditRow(ThemeData theme) {
+    final audit = _auditResult;
+    final isLoaded = audit != null && audit.isLoaded;
+
+    String clusterStr = '—';
+    Color clusterColor = Colors.white70;
+    if (isLoaded) {
+      if (audit.error != null && audit.error!.isNotEmpty) {
+        clusterStr = '—';
+      } else {
+        clusterStr = '${audit.maxClusterRatio}%';
+        if (audit.hasClusterWarning) {
+          clusterColor = Colors.redAccent;
+        } else if (audit.hasClusterCaution) {
+          clusterColor = Colors.amberAccent;
+        } else {
+          clusterColor = Colors.greenAccent;
+        }
+      }
+    }
+
+    String smStr = '—';
+    Color smColor = Colors.white70;
+    if (isLoaded && (audit.error == null || audit.error!.isEmpty)) {
+      smStr = audit.smartCount > 0
+          ? '${audit.smartCount} (${audit.smartRatio}%)'
+          : '0';
+      smColor = audit.isSmartMoneyHealthy ? Colors.greenAccent : Colors.white70;
+    }
+
+    String kolStr = '—';
+    Color kolColor = Colors.white70;
+    if (isLoaded && (audit.error == null || audit.error!.isEmpty)) {
+      kolStr = audit.kolCount > 0 ? '${audit.kolCount} (${audit.kolRatio}%)' : '0';
+      kolColor = audit.isKolStrong ? Colors.greenAccent : Colors.white70;
+    }
+
+    String top10Str = '—';
+    Color top10Color = Colors.white70;
+    if (isLoaded && (audit.error == null || audit.error!.isEmpty)) {
+      top10Str = '${audit.top100Ratio}%';
+      top10Color = audit.top100Ratio > 50.0 ? Colors.amberAccent : Colors.white70;
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildMetric('关联钱包', clusterStr, color: clusterColor),
+        _buildMetric('聪明钱', smStr, color: smColor),
+        _buildMetric('KOL', kolStr, color: kolColor),
+        _buildMetric('Top10', top10Str, color: top10Color),
+      ],
     );
   }
 

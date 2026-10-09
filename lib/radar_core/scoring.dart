@@ -587,9 +587,8 @@ DiscoveryScreenResult aveDiscoveryScreen(
     final turnover = old ? config.minOldTurnover5m : config.minMatureTurnover5m;
     final activityVolume = poolMarket?.volume5m ?? volume;
     final activityLiquidity = poolMarket?.liquidity ?? liquidity;
-    if (old && poolMarket == null) {
-      reasons.add('老池缺少同池流动性与成交证据');
-    }
+    // 吸收上游 v2.1.0 修复：老池缺少可选历史资料不作为硬性拦截项
+    // if (old && poolMarket == null) reasons.add('老池缺少同池流动性与成交证据');
     if (activityVolume < math.max(absolute, activityLiquidity * turnover)) {
       reasons.add(old ? '老池当前成交活跃度不足' : '当前成交活跃度不足');
     }
@@ -602,9 +601,8 @@ DiscoveryScreenResult aveDiscoveryScreen(
   if (mature && row['poolEvidence'] != null && trajectory == null) {
     reasons.add('池历史证据身份待核验');
   }
-  if (old && (trajectory == null || trajectory.athRatio == null)) {
-    reasons.add('老池历史轨迹待核验');
-  }
+  // 吸收上游 v2.1.0 修复：老池历史轨迹不作为硬性拦截项
+  // if (old && (trajectory == null || trajectory.athRatio == null)) reasons.add('老池历史轨迹待核验');
   if (trajectory != null &&
       trajectory.athRatio != null &&
       mature &&

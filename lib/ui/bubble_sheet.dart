@@ -105,7 +105,7 @@ class _BubbleSheetState extends State<BubbleSheet> {
     final displayChain = widget.chain.toUpperCase();
 
     return FractionallySizedBox(
-      heightFactor: 0.92,
+      heightFactor: 0.50,
       child: Column(
         children: [
           // Drag handle and top bar
