@@ -436,9 +436,41 @@ class AveClient {
   /// High-level discover & enrichment method matching upstream
   Future<List<Map<String, dynamic>>> discover(String chain,
       {int limit = 6, bool enrichPairs = true}) async {
-    final trendingRes = await trending(chain);
+    var page = 0;
+    var trendingRes = await trending(chain, page: page);
     final rows = List<Map<String, dynamic>>.from(trendingRes['rows'] as List);
     final now = DateTime.now().millisecondsSinceEpoch;
+
+    bool inScope(Map<String, dynamic> r) {
+      final mc = _numeric(r['market_cap']);
+      return mc == null || (mc >= 10000 && mc <= 150000);
+    }
+
+    var pages = 1;
+    final seen =
+        rows.map((r) => r['address']?.toString()).whereType<String>().toSet();
+
+    while (rows.where(inScope).length < limit &&
+        pages < 3 &&
+        trendingRes['nextPage'] is int &&
+        (trendingRes['nextPage'] as int) > page &&
+        (trendingRes['nextPage'] as int) <= 2) {
+      page = trendingRes['nextPage'] as int;
+      try {
+        trendingRes = await trending(chain, page: page);
+        pages++;
+        final additional =
+            List<Map<String, dynamic>>.from(trendingRes['rows'] as List)
+                .where((r) => !seen.contains(r['address']?.toString()));
+        for (final r in additional) {
+          seen.add(r['address']?.toString() ?? '');
+          rows.add(r);
+        }
+        if (additional.isEmpty) break;
+      } catch (_) {
+        break;
+      }
+    }
 
     if (!enrichPairs) return rows;
 

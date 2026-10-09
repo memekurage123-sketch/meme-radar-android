@@ -93,7 +93,13 @@ void main(List<String> args) async {
         print('    得分:  $score | 状态: ${c['status']}');
       }
     } else {
-      print('\n[i] 本轮扫描未产生满足全部初筛硬性门槛的候选（正常现象，Meme 过滤严苛）。');
+      print('\n[i] 本轮扫描未产生候选。以下是部分被拦截代币的原因：');
+      final rows = result['discoveredRows'] as List<dynamic>? ?? [];
+      for (var row in rows) {
+        final screen = discoveryScreen(Map<String, dynamic>.from(row), config, DateTime.now().millisecondsSinceEpoch / 1000.0);
+        final symbol = row['symbol'] ?? '?';
+        print('  - $symbol (${row['address']}): ${screen.reasons.join(', ')}');
+      }
     }
 
     print('\n[✓] 真实 AVE API 扫描执行测试 PASS！');
