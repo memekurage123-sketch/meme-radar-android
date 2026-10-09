@@ -144,12 +144,14 @@ DeepClassification mergeSecondaryClassification(
 class Scanner {
   final AveClient aveClient;
   final SecondaryValidator? secondaryValidator;
+  final DexBatchMarketOverlay? marketOverlay;
   final RadarConfig config;
   final RadarState state;
 
   Scanner({
     required this.aveClient,
     this.secondaryValidator,
+    this.marketOverlay,
     required this.config,
     required this.state,
   });
@@ -163,12 +165,22 @@ class Scanner {
 
     try {
       // 1. Fetch raw discovery rows from AVE
-      final discoveredRows = await aveClient.discover(
+      var discoveredRows = await aveClient.discover(
         chain,
         limit:
             config.maxDeepAuditsPerCycle > 0 ? config.maxDeepAuditsPerCycle : 6,
         enrichPairs: true,
       );
+
+      // 1.5. Enrich market facts with DexScreener batch overlay
+      if (marketOverlay != null) {
+        discoveredRows = await marketOverlay!.enrich(
+          chain,
+          discoveredRows,
+          minMarketCap: config.discoveryMinMarketCap,
+          maxMarketCap: config.discoveryMaxMarketCap,
+        );
+      }
 
       final now = DateTime.now().millisecondsSinceEpoch;
       final nowSec = now / 1000.0;

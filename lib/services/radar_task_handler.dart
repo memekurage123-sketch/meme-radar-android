@@ -7,6 +7,7 @@ import '../radar_core/config.dart';
 import '../radar_core/scanner.dart';
 import '../radar_core/state.dart';
 import '../radar_core/live_discovery.dart';
+import '../radar_core/secondary.dart';
 import 'storage_service.dart';
 import 'notification_service.dart';
 import 'notification_deduper.dart';
@@ -20,6 +21,7 @@ void startCallback() {
 
 class RadarTaskHandler extends TaskHandler {
   AveClient? _aveClient;
+  DexBatchMarketOverlay? _marketOverlay;
   Scanner? _scanner;
   RadarState? _state;
   StorageService? _storageService;
@@ -64,9 +66,11 @@ class RadarTaskHandler extends TaskHandler {
       }
 
       _state = RadarState(activeChain: _activeChain);
-      _aveClient = AveClient(apiKey: apiKey.trim());
+      _aveClient = AveClient(apiKey: apiKey);
+      _marketOverlay = DexBatchMarketOverlay();
       _scanner = Scanner(
           aveClient: _aveClient!,
+          marketOverlay: _marketOverlay,
           config: RadarConfig(chain: _activeChain),
           state: _state!);
 
@@ -167,6 +171,8 @@ class RadarTaskHandler extends TaskHandler {
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
     _aveClient?.close();
     _aveClient = null;
+    _marketOverlay?.close();
+    _marketOverlay = null;
     _scanner = null;
     _state = null;
   }
@@ -186,6 +192,7 @@ class RadarTaskHandler extends TaskHandler {
             if (_aveClient != null) {
               _scanner = Scanner(
                   aveClient: _aveClient!,
+                  marketOverlay: _marketOverlay,
                   config: RadarConfig(chain: _activeChain),
                   state: _state!);
             }

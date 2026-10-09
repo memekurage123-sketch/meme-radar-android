@@ -596,7 +596,6 @@ DiscoveryScreenResult aveDiscoveryScreen(
 
   final trajectory = freshAvePoolTrajectory(row, chain, now);
   final mature = ageSec >= config.matureMarketAgeSec;
-  final old = ageSec >= config.oldMarketAgeSec;
 
   if (mature && row['poolEvidence'] != null && trajectory == null) {
     reasons.add('池历史证据身份待核验');

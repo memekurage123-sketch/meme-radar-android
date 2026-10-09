@@ -139,7 +139,6 @@ class BubbleAuditService {
 
       final data = jsonMap['data'] as Map<String, dynamic>? ?? {};
       final holders = (data['holderStats'] as List<dynamic>?) ?? [];
-      final aggregate = (data['aggregateStats'] as Map<String, dynamic>?) ?? {};
 
       // 1. 前 10 大持仓集中度 (Top10 Ratio)
       // 计算前 10 个非 LP 地址的持仓比例之和

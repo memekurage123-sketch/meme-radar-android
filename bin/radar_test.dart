@@ -3,6 +3,7 @@ import 'package:meme_radar_android/radar_core/ave.dart';
 import 'package:meme_radar_android/radar_core/config.dart';
 import 'package:meme_radar_android/radar_core/scanner.dart';
 import 'package:meme_radar_android/radar_core/scoring.dart';
+import 'package:meme_radar_android/radar_core/secondary.dart';
 import 'package:meme_radar_android/radar_core/state.dart';
 
 void main(List<String> args) async {
@@ -52,9 +53,14 @@ void main(List<String> args) async {
   print('[i] 正在请求 AVE Data API ($aveOrigin)...');
 
   final aveClient = AveClient(apiKey: apiKey);
+  final marketOverlay = DexBatchMarketOverlay();
   final config = RadarConfig(chain: chain);
   final state = RadarState(activeChain: chain);
-  final scanner = Scanner(aveClient: aveClient, config: config, state: state);
+  final scanner = Scanner(
+      aveClient: aveClient,
+      marketOverlay: marketOverlay,
+      config: config,
+      state: state);
 
   try {
     final stopwatch = Stopwatch()..start();
@@ -95,6 +101,7 @@ void main(List<String> args) async {
     print('\n[!] 扫描请求异常: $e');
     exitCode = 1;
   } finally {
+    marketOverlay.close();
     aveClient.close();
   }
 }

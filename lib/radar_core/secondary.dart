@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'address.dart';
+import 'pool_identity.dart';
 
 const Map<String, String> dexChainIds = {
   'sol': 'solana',
@@ -506,4 +507,282 @@ class SecondaryValidator {
       };
     }
   }
+}
+
+int? _optionalCount(dynamic value) {
+  final n = _optionalNumber(value);
+  return (n != null && n >= 0 && n == n.truncateToDouble()) ? n.toInt() : null;
+}
+
+Map<String, Map<String, dynamic>> parseDexBatch(
+  dynamic payload, {
+  required String chain,
+  required String dexChainId,
+  required List<String> tokenAddresses,
+  required int capturedAt,
+}) {
+  if (payload is! List || payload.length > 1000) {
+    throw Exception('unexpected DexScreener batch JSON shape');
+  }
+  final requested =
+      tokenAddresses.map((v) => _normalizedAddress(v, chain)).toSet();
+  final best = <String, Map<String, dynamic>>{};
+
+  for (final pair in payload) {
+    if (pair is! Map || _cleanString(pair['chainId'], 32) != dexChainId) {
+      continue;
+    }
+    final baseAddress =
+        _normalizedAddress(pair['baseToken']?['address'], chain);
+    final quoteAddress =
+        _normalizedAddress(pair['quoteToken']?['address'], chain);
+    final members = [baseAddress, quoteAddress]
+        .where((addr) => requested.contains(addr))
+        .toList();
+    final pairAddress = pair['pairAddress']?.toString();
+    if (members.isEmpty || !validPoolAddress(chain, pairAddress)) continue;
+
+    final liquidity = _optionalNonNegative(pair['liquidity']?['usd']);
+    final volume5m = _optionalNonNegative(pair['volume']?['m5']);
+    final txns = pair['txns'] is Map ? pair['txns'] as Map : const {};
+    final m5 = txns['m5'] is Map ? txns['m5'] as Map : const {};
+    final buys5m = _optionalCount(m5['buys']);
+    final sells5m = _optionalCount(m5['sells']);
+    final createdAt = _optionalNonNegative(pair['pairCreatedAt'])?.toInt();
+    if (liquidity == null ||
+        volume5m == null ||
+        createdAt == null ||
+        createdAt <= 0 ||
+        createdAt > capturedAt + 300000) {
+      continue;
+    }
+
+    final poolMarket = <String, dynamic>{
+      'pairAddress': _cleanString(pairAddress, 128),
+      'dexId': _cleanString(pair['dexId'], 64),
+      'liquidity': liquidity,
+      'volume5m': volume5m,
+      'pairCreatedAt': createdAt,
+      'swaps5m': (buys5m != null && sells5m != null) ? buys5m + sells5m : null,
+    };
+
+    for (final tokenAddress in members) {
+      final isBase = tokenAddress == baseAddress;
+      final market = <String, dynamic>{
+        ...poolMarket,
+        'priceUsd': isBase ? _optionalNonNegative(pair['priceUsd']) : null,
+        'marketCap': isBase ? _optionalNonNegative(pair['marketCap']) : null,
+        'fdv': isBase ? _optionalNonNegative(pair['fdv']) : null,
+        'buys5m': isBase ? buys5m : null,
+        'sells5m': isBase ? sells5m : null,
+      };
+
+      final previous = best[tokenAddress];
+      if (previous == null ||
+          (market['liquidity'] as double) >
+              (previous['liquidity'] as double)) {
+        best[tokenAddress] = market;
+      }
+    }
+  }
+
+  return best;
+}
+
+List<Map<String, dynamic>> overlayDexMarket(
+  List<Map<String, dynamic>> rows,
+  String chain,
+  Map<String, Map<String, dynamic>> marketByToken,
+  int capturedAt,
+  int ttlMs,
+) {
+  return rows.map((row) {
+    final addr = _normalizedAddress(row['address'], chain);
+    final market = marketByToken[addr];
+    if (market == null) return row;
+
+    final evidence = verifiedAvePoolEvidence(row, chain);
+    final evidencePair = evidence?.pair ?? '';
+    if (evidencePair.isNotEmpty &&
+        evidencePair != _normalizedAddress(market['pairAddress'], chain)) {
+      return row;
+    }
+
+    final cleanRow = evidence != null
+        ? Map<String, dynamic>.from(row)
+        : (Map<String, dynamic>.from(row)
+          ..remove('first_trade_at')
+          ..remove('firstTradeAt')
+          ..remove('last_trade_at')
+          ..remove('lastTradeAt')
+          ..remove('poolEvidence'));
+
+    final marketCap = market['marketCap'] ?? cleanRow['market_cap'];
+    final priceUsd = market['priceUsd'] as double?;
+    final marketOverlayPriceUpdated = priceUsd != null && priceUsd > 0;
+    final price = marketOverlayPriceUpdated ? priceUsd : null;
+
+    final pairCreatedAtMs = market['pairCreatedAt'] as int;
+
+    return <String, dynamic>{
+      ...cleanRow,
+      if (price != null) 'price': price,
+      if (marketCap != null) 'market_cap': marketCap,
+      'marketCapSourceUpdatedAt': market['marketCap'] != null
+          ? capturedAt
+          : cleanRow['marketCapSourceUpdatedAt'],
+      'marketCapCapturedAt': market['marketCap'] != null
+          ? capturedAt
+          : cleanRow['marketCapCapturedAt'],
+      'marketCapExpiresAt': market['marketCap'] != null
+          ? capturedAt + ttlMs
+          : cleanRow['marketCapExpiresAt'],
+      'liquidity': market['liquidity'],
+      'volume_5m': market['volume5m'],
+      'buys_5m': market['buys5m'],
+      'sells_5m': market['sells5m'],
+      'swaps_5m': market['swaps5m'],
+      'buy_volume_5m': null,
+      'sell_volume_5m': null,
+      'pool_created_at': pairCreatedAtMs ~/ 1000,
+      'poolCreatedAt': pairCreatedAtMs,
+      'pairAddress': market['pairAddress'],
+      'dexId': market['dexId'],
+      'ageBasis': 'pool',
+      'activityWindow': '5m',
+      'tokenSourceUpdatedAt':
+          cleanRow['tokenSourceUpdatedAt'] ?? cleanRow['sourceUpdatedAt'],
+      'tokenCapturedAt': cleanRow['tokenCapturedAt'] ?? cleanRow['capturedAt'],
+      'capturedAt': capturedAt,
+      'sourceUpdatedAt': capturedAt,
+      'sampledAt': capturedAt,
+      'expiresAt': capturedAt + ttlMs,
+      'stale': false,
+      'marketOverlayProvider': 'DEXSCREENER',
+      'marketOverlayCapturedAt': capturedAt,
+      'marketOverlayPriceUpdated': marketOverlayPriceUpdated,
+    };
+  }).toList();
+}
+
+class DexBatchMarketOverlay {
+  final http.Client _client;
+  final bool _ownsClient;
+  final int timeoutMs;
+  final int ttlMs;
+  final int staleTtlMs;
+  final Map<String, _DexCacheEntry> _cache = {};
+  final Map<String, int> _batchTurns = {};
+
+  DexBatchMarketOverlay({
+    http.Client? client,
+    this.timeoutMs = 8000,
+    this.ttlMs = 20000,
+    this.staleTtlMs = 60000,
+  })  : _client = client ?? http.Client(),
+        _ownsClient = client == null;
+
+  void close() {
+    if (_ownsClient) _client.close();
+  }
+
+  Future<List<Map<String, dynamic>>> enrich(
+    String chain,
+    List<Map<String, dynamic>> rows, {
+    double minMarketCap = 0,
+    double maxMarketCap = double.infinity,
+  }) async {
+    if (rows.isEmpty) return rows;
+    final normalizedChain = _cleanString(chain, 24).toLowerCase();
+    final dexChainId = dexBatchChainIds[normalizedChain];
+    if (dexChainId == null) return rows;
+
+    final eligible = <String>[];
+    final seen = <String>{};
+    for (final row in rows) {
+      final mc = _optionalNonNegative(row['market_cap']);
+      final addr = row['address']?.toString() ?? '';
+      if (row['marketProvider'] == 'AVE' &&
+          mc != null &&
+          mc >= minMarketCap &&
+          mc <= maxMarketCap &&
+          validTokenAddress(normalizedChain, addr)) {
+        final norm = _normalizedAddress(addr, normalizedChain);
+        if (seen.add(norm)) {
+          eligible.add(norm);
+          if (eligible.length >= 300) break;
+        }
+      }
+    }
+    if (eligible.isEmpty) return rows;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final cursor = _batchTurns[normalizedChain] ?? 0;
+    final offset = cursor % eligible.length;
+    final selected = eligible.skip(offset).take(30).toList();
+    _batchTurns[normalizedChain] = offset + selected.length;
+
+    final key = '$normalizedChain:${(List<String>.from(selected)..sort()).join(',')}';
+    final cached = _cache[key];
+    if (cached != null && cached.until > now) {
+      return overlayDexMarket(
+          rows, normalizedChain, cached.marketByToken, cached.capturedAt, ttlMs);
+    }
+
+    try {
+      final encodedAddrs = selected.map(Uri.encodeComponent).join(',');
+      final url =
+          'https://api.dexscreener.com/tokens/v1/$dexChainId/$encodedAddrs';
+      final res = await _client.get(Uri.parse(url), headers: {
+        'Accept': 'application/json'
+      }).timeout(Duration(milliseconds: timeoutMs));
+
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        final payload = jsonDecode(res.body);
+        final capturedAt = DateTime.now().millisecondsSinceEpoch;
+        final marketByToken = parseDexBatch(
+          payload,
+          chain: normalizedChain,
+          dexChainId: dexChainId,
+          tokenAddresses: selected,
+          capturedAt: capturedAt,
+        );
+
+        final entry = _DexCacheEntry(
+          marketByToken: marketByToken,
+          capturedAt: capturedAt,
+          until: capturedAt + ttlMs,
+          staleUntil: capturedAt + staleTtlMs,
+        );
+        if (!_cache.containsKey(key) && _cache.length >= 16) {
+          _cache.remove(_cache.keys.first);
+        }
+        _cache[key] = entry;
+
+        return overlayDexMarket(
+            rows, normalizedChain, marketByToken, capturedAt, ttlMs);
+      }
+    } catch (_) {
+      if (cached != null && cached.staleUntil > now) {
+        return overlayDexMarket(
+            rows, normalizedChain, cached.marketByToken, cached.capturedAt, ttlMs);
+      }
+    }
+
+    return rows;
+  }
+}
+
+class _DexCacheEntry {
+  final Map<String, Map<String, dynamic>> marketByToken;
+  final int capturedAt;
+  final int until;
+  final int staleUntil;
+
+  _DexCacheEntry({
+    required this.marketByToken,
+    required this.capturedAt,
+    required this.until,
+    required this.staleUntil,
+  });
 }
