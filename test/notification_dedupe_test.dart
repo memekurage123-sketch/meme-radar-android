@@ -33,11 +33,11 @@ void main() {
       expect(notifyDiffChain, true);
     });
 
-    test('超过 2h cooldown 后 A 再次 LIVE_READY -> 可以再次 notify', () {
+    test('超过 14d cooldown 后 A 再次 LIVE_READY -> 可以再次 notify', () {
       final deduper = NotificationDeduper({'sol_TokenA': 1000});
-      final twoHoursAndOneMs = 1000 + (2 * 60 * 60 * 1000) + 1;
+      final fourteenDaysAndOneMs = 1000 + (14 * 24 * 60 * 60 * 1000) + 1;
       final shouldNotify =
-          deduper.shouldNotify('sol', 'TokenA', twoHoursAndOneMs);
+          deduper.shouldNotify('sol', 'TokenA', fourteenDaysAndOneMs);
       expect(shouldNotify, true);
     });
 
@@ -46,7 +46,7 @@ void main() {
         'sol_TokenA': 1000,
         'sol_TokenB': 1000 + 1 * 60 * 60 * 1000, // 1h ago
       });
-      final now = 1000 + 2 * 60 * 60 * 1000 + 1; // 2h 1ms later
+      final now = 1000 + 14 * 24 * 60 * 60 * 1000 + 1; // 14d 1ms later
       final clean = deduper.cleanMap(now);
       expect(clean.containsKey('sol_TokenA'), false);
       expect(clean.containsKey('sol_TokenB'), true);
